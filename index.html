@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="preload" as="image" href="Final Assets/Lumpy Logo_BG 1.png" />
+  <link rel="preload" as="image" href="Final Assets/bg.jpg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -19,6 +19,9 @@
         <img src="Final Assets/Lumpy Logo_Horizontal Logo.png" alt="Lumpy" />
       </a>
     </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
     <ul class="nav-links">
       <li><a href="index.html" class="active">Home</a></li>
       <li><a href="about.html">About</a></li>
@@ -58,7 +61,7 @@
         </div>
       </div>
     </div>
-    <img class="hero-octo reveal reveal-right stagger-2" src="Final Assets/Octo Gif.gif" alt="" aria-hidden="true" />
+    <img class="hero-octo reveal reveal-right stagger-2" src="Final Assets/Lumpy Logo_Plain Octo.png" alt="" aria-hidden="true" />
   </section>
 
   <!-- PAIN -->
@@ -312,6 +315,24 @@
     }, observerOptions);
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Hamburger Menu
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
 
     // Nav Background on Scroll
     const nav = document.querySelector('.nav');
