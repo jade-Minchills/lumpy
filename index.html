@@ -6,9 +6,52 @@
   <title>Lumpy — Financial Planning for Irregular Income</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="preload" as="image" href="Final Assets/bg.jpg" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <link rel="preload" as="image" href="Final Assets/optimized/bg.jpg" />
+  
+  <style>
+    :root {
+      --orange: hsl(19, 81%, 53%); --orange-dk: hsl(19, 81%, 44%); --green: hsl(91, 51%, 56%); --beige: hsl(53, 31%, 71%); --sky: hsl(197, 73%, 73%); --black: hsl(0, 0%, 7%); --cream: hsl(45, 45%, 96%); --white: hsl(0, 0%, 100%); --text: hsl(0, 0%, 7%); --muted: hsl(0, 0%, 40%); --radius: 24px; --radius-sm: 12px; --shadow: 0 4px 12px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.03); --shadow-lg: 0 20px 40px rgba(0,0,0,0.08), 0 6px 12px rgba(0,0,0,0.04); --glass-bg: rgba(255, 255, 255, 0.4); --glass-border: rgba(255, 255, 255, 0.45); --glass-blur: 16px; --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: 'Nunito', sans-serif; color: var(--text); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    .label { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: var(--beige); color: var(--black); padding: 4px 14px; border-radius: 100px; margin-bottom: 1.2rem; }
+    .label--light { background: rgba(255,255,255,0.25); color: var(--white); }
+    .btn { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; padding: 14px 34px; border-radius: 100px; cursor: pointer; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; border: none; line-height: 1; }
+    .btn--primary { background: var(--orange); color: var(--white); }
+    .btn--outline { background: transparent; color: var(--white); border: 2.5px solid rgba(255,255,255,0.7); }
+    .btn--lg { font-size: 1.15rem; padding: 18px 44px; }
+    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s ease; }
+    .nav-logo img { height: 40px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+    .nav-links a { text-decoration: none; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem; color: var(--muted); transition: color 0.2s; position: relative; padding-bottom: 3px; }
+    .nav-cta { background: var(--orange); color: var(--white) !important; padding: 8px 22px; border-radius: 100px; }
+    .hero { position: relative; min-height: 95vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--black); text-align: center; padding: 120px 0 80px; }
+    .hero-mesh { position: absolute; inset: 0; z-index: 1; background: radial-gradient(at 0% 0%, hsla(19, 81%, 53%, 0.18) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(91, 51%, 56%, 0.18) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(197, 73%, 73%, 0.18) 0, transparent 50%), radial-gradient(at 0% 100%, hsla(53, 31%, 71%, 0.18) 0, transparent 50%); filter: blur(80px); animation: mesh-flow 25s ease-in-out infinite alternate; will-change: transform; }
+    @keyframes mesh-flow { 0% { transform: scale(1) translate(0, 0) rotate(0deg); } 50% { transform: scale(1.15) translate(40px, -30px) rotate(2deg); } 100% { transform: scale(1.05) translate(-30px, 40px) rotate(-1deg); } }
+    .hero-lumps { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .lump { position: absolute; width: 300px; height: 300px; background: rgba(255, 255, 255, 0.04); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; border: 1px solid rgba(255, 255, 255, 0.12); animation: lump-float 20s ease-in-out infinite; will-change: transform, border-radius; }
+    @keyframes lump-float { 0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; } 33% { transform: translate(40px, -60px) rotate(8deg) scale(1.08); border-radius: 60% 40% 30% 70% / 50% 60% 40% 60%; } 66% { transform: translate(-30px, 50px) rotate(-8deg) scale(0.92); border-radius: 30% 70% 50% 50% / 60% 40% 70% 30%; } }
+    .hero-bg { position: absolute; inset: 0; background-image: url('Final Assets/optimized/bg.jpg'); background-size: cover; background-position: center; opacity: 0.12; z-index: 0; mix-blend-mode: overlay; }
+    .hero-content { position: relative; z-index: 10; max-width: 920px; padding: 0 2rem; }
+    .hero-headline { font-size: clamp(3.2rem, 9vw, 6rem); font-weight: 950; color: var(--white); margin-bottom: 2rem; letter-spacing: -0.04em; line-height: 1; text-wrap: balance; }
+    .hero-headline em { font-style: normal; background: linear-gradient(135deg, var(--orange) 0%, #ff8c52 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
+    .hero-sub { font-size: clamp(1.15rem, 2vw, 1.35rem); font-weight: 500; color: rgba(255,255,255,0.8); max-width: 680px; margin: 0 auto 1.5rem; line-height: 1.6; }
+    .hero-punch { font-family: 'Baloo 2', cursive; font-size: 1.4rem; font-weight: 700; color: var(--beige); margin-bottom: 3rem; opacity: 0.9; }
+    .hero-ctas { display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-octo { position: absolute; right: 8%; bottom: 8%; width: clamp(140px, 18vw, 260px); z-index: 5; opacity: 0.85; filter: drop-shadow(0 30px 60px rgba(0,0,0,0.5)); animation: float 6s ease-in-out infinite; will-change: transform; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+  </style>
+  <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
 </head>
 <body>
 
@@ -16,7 +59,7 @@
   <nav class="nav">
     <div class="nav-logo">
       <a href="index.html">
-        <img src="Final Assets/Lumpy Logo_Horizontal Logo.png" alt="Lumpy" />
+        <img src="Final Assets/optimized/logo-horizontal.png" alt="Lumpy" width="194" height="40" />
       </a>
     </div>
     <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
@@ -61,7 +104,7 @@
         </div>
       </div>
     </div>
-    <img class="hero-octo reveal reveal-right stagger-2" src="Final Assets/Lumpy Logo_Plain Octo.png" alt="" aria-hidden="true" />
+    <img class="hero-octo reveal reveal-right stagger-2" src="Final Assets/optimized/octo-plain.png" alt="" aria-hidden="true" width="260" height="219" />
   </section>
 
   <!-- PAIN -->
@@ -167,7 +210,7 @@
           <p class="audience-close">If your income is unpredictable — this is your home.</p>
         </div>
         <div class="audience-visual reveal reveal-right">
-          <img src="Final Assets/Lumpy Logo_Plain Octo.png" alt="" aria-hidden="true" loading="lazy" />
+          <img src="Final Assets/optimized/octo-plain.png" alt="" aria-hidden="true" loading="lazy" width="380" height="320" />
         </div>
       </div>
     </div>
@@ -293,7 +336,7 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <img src="Final Assets/Lumpy Logo_White Logo.png" alt="Lumpy" />
+    <img src="Final Assets/optimized/logo-white.png" alt="Lumpy" loading="lazy" width="155" height="32" />
     <p class="footer-copy">© 2024 Lumpy. Built for irregular income.</p>
   </footer>
 

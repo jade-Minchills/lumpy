@@ -6,8 +6,39 @@
   <title>About — Lumpy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  
+  <style>
+    :root {
+      --orange: hsl(19, 81%, 53%); --orange-dk: hsl(19, 81%, 44%); --green: hsl(91, 51%, 56%); --beige: hsl(53, 31%, 71%); --sky: hsl(197, 73%, 73%); --black: hsl(0, 0%, 7%); --cream: hsl(45, 45%, 96%); --white: hsl(0, 0%, 100%); --text: hsl(0, 0%, 7%); --muted: hsl(0, 0%, 40%); --radius: 24px; --radius-sm: 12px; --shadow: 0 4px 12px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.03); --shadow-lg: 0 20px 40px rgba(0,0,0,0.08), 0 6px 12px rgba(0,0,0,0.04); --glass-bg: rgba(255, 255, 255, 0.4); --glass-border: rgba(255, 255, 255, 0.45); --glass-blur: 16px; --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: 'Nunito', sans-serif; color: var(--text); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    .label { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: var(--beige); color: var(--black); padding: 4px 14px; border-radius: 100px; margin-bottom: 1.2rem; }
+    .label--light { background: rgba(255,255,255,0.25); color: var(--white); }
+    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s ease; }
+    .nav-logo img { height: 40px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+    .nav-links a { text-decoration: none; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem; color: var(--muted); transition: color 0.2s; position: relative; padding-bottom: 3px; }
+    .nav-cta { background: var(--orange); color: var(--white) !important; padding: 8px 22px; border-radius: 100px; }
+    .about-hero { background: var(--black); position: relative; overflow: hidden; padding: 120px 0 100px; }
+    .about-hero-bg { position: absolute; inset: 0; background-image: url('Final Assets/optimized/bg.jpg'); background-size: cover; background-position: center; opacity: 0.6; }
+    .about-hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(17,17,17,0.6) 0%, rgba(17,17,17,0.2) 100%); }
+    .about-hero-content { position: relative; z-index: 2; max-width: 760px; }
+    .about-hero-content h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; color: var(--white); margin-bottom: 1.25rem; }
+    .about-hero-content h1 em { font-style: normal; color: var(--orange); }
+    .about-hero-content p { font-size: 1.2rem; color: rgba(255,255,255,0.85); line-height: 1.75; }
+    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+  </style>
+  <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
 </head>
 <body>
 
@@ -15,7 +46,7 @@
   <nav class="nav">
     <div class="nav-logo">
       <a href="index.html">
-        <img src="Final Assets/Lumpy Logo_Horizontal Logo.png" alt="Lumpy" />
+        <img src="Final Assets/optimized/logo-horizontal.png" alt="Lumpy" width="194" height="40" />
       </a>
     </div>
     <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
@@ -146,7 +177,7 @@
           <p class="whatwedo-close">From reactive… to in control.</p>
         </div>
         <div class="whatwedo-visual reveal reveal-right">
-          <img src="Final Assets/Lumpy Logo_Plain Octo.png" alt="" aria-hidden="true" />
+          <img src="Final Assets/optimized/octo-plain.png" alt="" aria-hidden="true" loading="lazy" width="380" height="320" />
         </div>
       </div>
     </div>
@@ -215,7 +246,7 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <img src="Final Assets/Lumpy Logo_White Logo.png" alt="Lumpy" />
+    <img src="Final Assets/optimized/logo-white.png" alt="Lumpy" loading="lazy" width="155" height="32" />
     <p class="footer-copy">© 2024 Lumpy. Built for irregular income.</p>
   </footer>
 

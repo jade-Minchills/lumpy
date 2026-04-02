@@ -312,7 +312,7 @@ a { color: inherit; }
 .hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('Final Assets/bg.jpg');
+  background-image: url('Final Assets/optimized/bg.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0.12;
@@ -1021,7 +1021,7 @@ a { color: inherit; }
 .final-cta-bg {
   position: absolute;
   inset: 0;
-  background-image: url('Final Assets/bg.jpg');
+  background-image: url('Final Assets/optimized/bg.jpg');
   background-size: cover;
   background-position: center top;
   opacity: 0.18;
@@ -1083,7 +1083,7 @@ a { color: inherit; }
 .about-hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('Final Assets/bg.jpg');
+  background-image: url('Final Assets/optimized/bg.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0.6;
