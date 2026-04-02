@@ -1,4 +1,7 @@
 .DS_Store
 *.docx
 *.zip
+*.ai
 .claude/
+# Large assets (over GitHub's 100MB limit)
+Final Assets*/Lumpy Logo_BG 1.png
