@@ -22,7 +22,7 @@
     .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
     .label { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: var(--beige); color: var(--black); padding: 4px 14px; border-radius: 100px; margin-bottom: 1.2rem; }
     .label--light { background: rgba(255,255,255,0.25); color: var(--white); }
-    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s ease; }
+    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; }
     .nav-logo img { height: 40px; width: auto; }
     .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
     .nav-links a { text-decoration: none; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem; color: var(--muted); transition: color 0.2s; position: relative; padding-bottom: 3px; }
@@ -34,11 +34,37 @@
     .about-hero-content h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; color: var(--white); margin-bottom: 1.25rem; }
     .about-hero-content h1 em { font-style: normal; color: var(--orange); }
     .about-hero-content p { font-size: 1.2rem; color: rgba(255,255,255,0.85); line-height: 1.75; }
-    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1); }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.2, 1, 0.3, 1), transform 0.8s cubic-bezier(0.2, 1, 0.3, 1); }
     .reveal.active { opacity: 1; transform: translateY(0); }
   </style>
   <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="style.css"></noscript>
+
+  <style>
+    .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.5); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; align-items: center; justify-content: center; padding: 1.5rem; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-card { background: var(--white); border-radius: var(--radius); padding: clamp(2rem, 5vw, 3rem); max-width: 480px; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.35); position: relative; transform: translateY(20px) scale(0.98); transition: transform 0.3s cubic-bezier(0.2, 1, 0.3, 1); }
+    .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+    .modal-close { position: absolute; top: 1.25rem; right: 1.25rem; width: 32px; height: 32px; border-radius: 50%; background: var(--cream); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .modal-close:hover { background: #e8e3d8; }
+    .modal-card h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin-bottom: 0.4rem; }
+    .modal-sub { color: var(--muted); margin-bottom: 1.75rem; font-size: 1rem; }
+    .m-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 1.2rem; }
+    .m-field label { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 0.88rem; }
+    .m-field input, .m-field select { width: 100%; padding: 13px 16px; border: 2px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-size: 1rem; background: var(--cream); color: var(--text); outline: none; appearance: none; -webkit-appearance: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .m-field input:focus, .m-field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px hsla(19,81%,53%,0.14); }
+    .m-field input.invalid, .m-field select.invalid { border-color: hsl(0,80%,55%); }
+    .m-select-wrap { position: relative; }
+    .m-select-wrap::after { content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 10px; height: 6px; background: var(--muted); clip-path: polygon(0 0, 100% 0, 50% 100%); pointer-events: none; }
+    .m-field-error { font-size: 0.8rem; color: hsl(0,80%,55%); min-height: 1em; }
+    .m-optional { font-family: 'Nunito', sans-serif; font-weight: 400; font-size: 0.78rem; color: var(--muted); }
+    .m-form-error { font-size: 0.88rem; color: hsl(0,80%,55%); text-align: center; margin-bottom: 0.75rem; min-height: 1.2em; }
+    .m-submit { width: 100%; font-family: 'Baloo 2', cursive; font-size: 1.05rem; font-weight: 700; padding: 16px; border-radius: 100px; background: var(--orange); color: var(--white); border: none; cursor: pointer; transition: background 0.15s, transform 0.15s; line-height: 1; }
+    .m-submit:hover:not(:disabled) { background: var(--orange-dk); transform: translateY(-2px); }
+    .m-submit:disabled { opacity: 0.65; pointer-events: none; }
+    .m-spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: m-spin 0.7s linear infinite; margin-left: 8px; vertical-align: middle; }
+    @keyframes m-spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
 
@@ -55,7 +81,8 @@
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html" class="active">About</a></li>
-      <li><a href="#" class="nav-cta">Get Started</a></li>
+      <li><a href="events.html">Events</a></li>
+      <li><a href="#" data-open-modal class="nav-cta">Get Started</a></li>
     </ul>
   </nav>
 
@@ -240,7 +267,7 @@
         <br /><br />
         You don't need a fixed income to build a stable life. You just need the right system.
       </p>
-      <a href="#" class="btn btn--dark btn--lg">Start Your Lumpy Journey</a>
+      <a href="#" data-open-modal class="btn btn--dark btn--lg">Start Your Lumpy Journey</a>
     </div>
   </section>
 
@@ -261,6 +288,7 @@
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('active');
+          observer.unobserve(entry.target);
         }
       });
     }, observerOptions);
@@ -288,11 +316,117 @@
     // Nav Background on Scroll
     const nav = document.querySelector('.nav');
     window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) {
-        nav.classList.add('nav--scrolled');
-      } else {
-        nav.classList.remove('nav--scrolled');
-      }
+      nav.classList.toggle('nav--scrolled', window.scrollY > 50);
+    }, { passive: true });
+
+    // ── Modal ─────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalOverlay = document.getElementById('signup-modal');
+
+      window.openModal = function() {
+        modalOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => document.getElementById('m-name').focus(), 300);
+      };
+
+      window.closeModal = function() {
+        modalOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+      };
+
+      document.querySelectorAll('[data-open-modal]').forEach(el => {
+        el.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+      });
+
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal();
+      });
+    });
+  </script>
+
+  <div class="modal-overlay" id="signup-modal" role="dialog" aria-modal="true" aria-label="Join Lumpy">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <span class="label">Step 1 of 2</span>
+      <h2>Let's get started</h2>
+      <p class="modal-sub">Tell us a little about yourself.</p>
+      <form id="modal-form" novalidate>
+        <div class="m-field">
+          <label for="m-name">Full name</label>
+          <input type="text" id="m-name" placeholder="Your full name" required autocomplete="name" />
+          <span class="m-field-error" id="m-name-err"></span>
+        </div>
+        <div class="m-field">
+          <label for="m-email">Email address</label>
+          <input type="email" id="m-email" placeholder="you@example.com" required autocomplete="email" />
+          <span class="m-field-error" id="m-email-err"></span>
+        </div>
+        <div class="m-field">
+          <label for="m-phone">Phone <span class="m-optional">(optional)</span></label>
+          <input type="tel" id="m-phone" placeholder="+27 000 000 0000" autocomplete="tel" />
+        </div>
+        <div class="m-field">
+          <label for="m-referral">How did you hear about Lumpy?</label>
+          <div class="m-select-wrap">
+            <select id="m-referral" required>
+              <option value="" disabled selected>Select one…</option>
+              <option value="social_media">Social media</option>
+              <option value="friend_referral">Friend / referral</option>
+              <option value="google">Google</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <span class="m-field-error" id="m-referral-err"></span>
+        </div>
+        <p class="m-form-error" id="m-form-err"></p>
+        <button type="submit" class="m-submit" id="m-submit">Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
+    const SUPABASE_URL      = 'https://rwvzstjsluchajwacwgz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dnpzdGpzbHVjaGFqd2Fjd2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjI2OTcsImV4cCI6MjA5MTI5ODY5N30.IqR8KwUYTfenqaopg30UmRHRbFO5oZI9TmotAGi3xqw';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form = document.getElementById('modal-form');
+    const submitBtn = document.getElementById('m-submit');
+
+    function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+    function validate(id, errId, check, msg) {
+      const el = document.getElementById(id), er = document.getElementById(errId);
+      if (!check(el.value.trim())) { el.classList.add('invalid'); er.textContent = msg; return false; }
+      el.classList.remove('invalid'); er.textContent = ''; return true;
+    }
+
+    document.getElementById('m-name').addEventListener('blur', () =>
+      validate('m-name', 'm-name-err', v => v.length >= 2, 'Please enter your full name.'));
+    document.getElementById('m-email').addEventListener('blur', () =>
+      validate('m-email', 'm-email-err', isValidEmail, 'Please enter a valid email address.'));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ok1 = validate('m-name',    'm-name-err',    v => v.length >= 2, 'Please enter your full name.');
+      const ok2 = validate('m-email',   'm-email-err',   isValidEmail,        'Please enter a valid email address.');
+      const ok3 = validate('m-referral','m-referral-err',v => v !== '',       'Please select an option.');
+      if (!ok1 || !ok2 || !ok3) return;
+
+      const name = document.getElementById('m-name').value.trim();
+      const email = document.getElementById('m-email').value.trim().toLowerCase();
+      const phone = document.getElementById('m-phone').value.trim() || null;
+      const referral = document.getElementById('m-referral').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Saving… <span class="m-spinner"></span>';
+
+      const { error } = await supabase.from('signups').insert({ name, email, phone, referral_source: referral });
+      if (error) console.error('Supabase:', error.code, error.message);
+
+      window.location.href = 'qualify.html?email=' + encodeURIComponent(email);
     });
   </script>
 </body>

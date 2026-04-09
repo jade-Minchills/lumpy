@@ -171,7 +171,7 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.3s ease;
+  transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .nav--scrolled {
@@ -265,12 +265,19 @@ a { color: inherit; }
   position: absolute;
   inset: 0;
   z-index: 1;
+  filter: blur(80px);
+  overflow: hidden;
+}
+
+.hero-mesh::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
   background:
     radial-gradient(at 0% 0%, hsla(19, 81%, 53%, 0.18) 0, transparent 50%),
     radial-gradient(at 100% 0%, hsla(91, 51%, 56%, 0.18) 0, transparent 50%),
     radial-gradient(at 100% 100%, hsla(197, 73%, 73%, 0.18) 0, transparent 50%),
     radial-gradient(at 0% 100%, hsla(53, 31%, 71%, 0.18) 0, transparent 50%);
-  filter: blur(80px);
   animation: mesh-flow 25s ease-in-out infinite alternate;
   will-change: transform;
 }
@@ -296,7 +303,7 @@ a { color: inherit; }
   border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   animation: lump-float 20s ease-in-out infinite;
-  will-change: transform, border-radius;
+  will-change: transform;
 }
 
 .lump--1 { top: 15%; left: 8%; width: 380px; height: 380px; animation-duration: 30s; opacity: 0.6; }
@@ -304,9 +311,9 @@ a { color: inherit; }
 .lump--3 { top: 60%; left: 45%; width: 220px; height: 220px; animation-duration: 22s; animation-delay: -3s; opacity: 0.7; }
 
 @keyframes lump-float {
-  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
-  33%      { transform: translate(40px, -60px) rotate(8deg) scale(1.08); border-radius: 60% 40% 30% 70% / 50% 60% 40% 60%; }
-  66%      { transform: translate(-30px, 50px) rotate(-8deg) scale(0.92); border-radius: 30% 70% 50% 50% / 60% 40% 70% 30%; }
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33%      { transform: translate(40px, -60px) rotate(8deg) scale(1.08); }
+  66%      { transform: translate(-30px, 50px) rotate(-8deg) scale(0.92); }
 }
 
 .hero-bg {
@@ -1718,7 +1725,7 @@ a { color: inherit; }
 
 .reveal {
   opacity: 0;
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reveal-up {

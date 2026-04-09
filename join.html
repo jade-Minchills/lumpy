@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join Lumpy — Get Started</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+
+  <style>
+    :root {
+      --orange: hsl(19, 81%, 53%); --orange-dk: hsl(19, 81%, 44%); --green: hsl(91, 51%, 56%); --beige: hsl(53, 31%, 71%); --sky: hsl(197, 73%, 73%); --black: hsl(0, 0%, 7%); --cream: hsl(45, 45%, 96%); --white: hsl(0, 0%, 100%); --text: hsl(0, 0%, 7%); --muted: hsl(0, 0%, 40%); --radius: 24px; --radius-sm: 12px; --shadow: 0 4px 12px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.03); --shadow-lg: 0 20px 40px rgba(0,0,0,0.08), 0 6px 12px rgba(0,0,0,0.04);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: 'Nunito', sans-serif; color: var(--text); background: var(--cream); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    .label { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: var(--beige); color: var(--black); padding: 4px 14px; border-radius: 100px; margin-bottom: 1.2rem; }
+    .btn { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; padding: 14px 34px; border-radius: 100px; cursor: pointer; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; border: none; line-height: 1; }
+    .btn--primary { background: var(--orange); color: var(--white); }
+    .btn--primary:hover { background: var(--orange-dk); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+    .btn--lg { font-size: 1.15rem; padding: 18px 44px; }
+    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s ease; }
+    .nav-logo img { height: 40px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+    .nav-links a { text-decoration: none; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem; color: var(--muted); transition: color 0.2s; }
+    .nav-cta { background: var(--orange); color: var(--white) !important; padding: 8px 22px; border-radius: 100px; }
+    .nav-toggle { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
+    .nav-toggle span { display: block; width: 24px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.3s ease; }
+
+    /* ── Page layout ─────────────────────────────── */
+    .join-page {
+      min-height: calc(100vh - 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1.5rem;
+    }
+
+    .join-card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: clamp(2rem, 5vw, 3.5rem);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .join-card h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+
+    .join-sub {
+      color: var(--muted);
+      margin-bottom: 2.25rem;
+      font-size: 1.05rem;
+    }
+
+    /* ── Form fields ─────────────────────────────── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 1.4rem;
+    }
+
+    .field label {
+      font-family: 'Baloo 2', cursive;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .optional {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      background: var(--cream);
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px hsla(19, 81%, 53%, 0.15);
+    }
+
+    .field input.invalid,
+    .field select.invalid {
+      border-color: hsl(0, 80%, 55%);
+    }
+
+    .select-wrap {
+      position: relative;
+    }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 6px;
+      background: var(--muted);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      pointer-events: none;
+    }
+
+    .field-error {
+      font-size: 0.82rem;
+      color: hsl(0, 80%, 55%);
+      min-height: 1em;
+    }
+
+    .form-error {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: hsl(0, 80%, 55%);
+    }
+
+    .join-submit {
+      width: 100%;
+      text-align: center;
+      margin-top: 0.5rem;
+      position: relative;
+    }
+
+    .join-submit:disabled {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ──────────────────────────────────── */
+    .footer { background: var(--black); padding: 3rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .footer-copy { font-size: 0.85rem; color: rgba(255,255,255,0.4); }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 600px) {
+      .nav-toggle { display: flex; }
+      .nav-links { display: none; position: fixed; inset: 80px 0 0 0; background: var(--white); flex-direction: column; align-items: center; justify-content: center; gap: 2rem; z-index: 199; }
+      .nav-links.open { display: flex; }
+    }
+  </style>
+  <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-logo">
+      <a href="index.html">
+        <img src="Final Assets/optimized/logo-horizontal.png" alt="Lumpy" width="194" height="40" />
+      </a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="events.html">Events</a></li>
+      <li><a href="join.html" class="nav-cta">Get Started</a></li>
+    </ul>
+  </nav>
+
+  <main class="join-page">
+    <div class="join-card">
+      <span class="label">Step 1 of 2</span>
+      <h1>Let's get started</h1>
+      <p class="join-sub">Tell us a little about yourself.</p>
+
+      <form id="join-form" novalidate>
+
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" placeholder="Your full name" required autocomplete="name" />
+          <span class="field-error" id="name-error"></span>
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
+          <span class="field-error" id="email-error"></span>
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone <span class="optional">(optional)</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="+27 000 000 0000" autocomplete="tel" />
+        </div>
+
+        <div class="field">
+          <label for="referral">How did you hear about Lumpy?</label>
+          <div class="select-wrap">
+            <select id="referral" name="referral" required>
+              <option value="" disabled selected>Select one…</option>
+              <option value="social_media">Social media</option>
+              <option value="friend_referral">Friend / referral</option>
+              <option value="google">Google</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <span class="field-error" id="referral-error"></span>
+        </div>
+
+        <p class="form-error" id="form-error"></p>
+
+        <button type="submit" class="btn btn--primary btn--lg join-submit" id="submit-btn">
+          Continue
+        </button>
+
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <img src="Final Assets/optimized/logo-white.png" alt="Lumpy" loading="lazy" width="155" height="32" />
+    <p class="footer-copy">© 2024 Lumpy. Built for irregular income.</p>
+  </footer>
+
+  <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
+
+    const SUPABASE_URL      = 'https://rwvzstjsluchajwacwgz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dnpzdGpzbHVjaGFqd2Fjd2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjI2OTcsImV4cCI6MjA5MTI5ODY5N30.IqR8KwUYTfenqaopg30UmRHRbFO5oZI9TmotAGi3xqw';
+
+    const supabase  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form      = document.getElementById('join-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const formError = document.getElementById('form-error');
+
+    function isValidEmail(v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    }
+
+    function validateField(id, errorId, check, message) {
+      const el  = document.getElementById(id);
+      const err = document.getElementById(errorId);
+      if (!check(el.value.trim())) {
+        el.classList.add('invalid');
+        err.textContent = message;
+        return false;
+      }
+      el.classList.remove('invalid');
+      err.textContent = '';
+      return true;
+    }
+
+    // Inline blur validation
+    document.getElementById('name').addEventListener('blur', () =>
+      validateField('name', 'name-error', v => v.length >= 2, 'Please enter your full name.'));
+    document.getElementById('email').addEventListener('blur', () =>
+      validateField('email', 'email-error', isValidEmail, 'Please enter a valid email address.'));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.textContent = '';
+
+      const okName     = validateField('name',     'name-error',     v => v.length >= 2,  'Please enter your full name.');
+      const okEmail    = validateField('email',    'email-error',    isValidEmail,         'Please enter a valid email address.');
+      const okReferral = validateField('referral', 'referral-error', v => v !== '',        'Please select an option.');
+
+      if (!okName || !okEmail || !okReferral) return;
+
+      const name     = document.getElementById('name').value.trim();
+      const email    = document.getElementById('email').value.trim().toLowerCase();
+      const phone    = document.getElementById('phone').value.trim() || null;
+      const referral = document.getElementById('referral').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Saving… <span class="spinner"></span>';
+
+      const { error } = await supabase
+        .from('signups')
+        .insert({ name, email, phone, referral_source: referral });
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Continue';
+
+      if (error) {
+        console.error('Supabase error:', error.code, error.message);
+        // Duplicate email — still let them through
+        // Any other error — log it but don't block (tables may not be set up yet)
+      }
+
+      const base = location.protocol === 'file:' ? 'qualify.html' : '/qualify.html';
+      window.location.href = base + '?email=' + encodeURIComponent(email);
+    });
+  </script>
+
+</body>
+</html>
