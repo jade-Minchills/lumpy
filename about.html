@@ -81,6 +81,19 @@
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html" class="active">About</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-dropdown-btn" aria-expanded="false">
+          Modules
+          <svg width="10" height="7" viewBox="0 0 10 7" fill="none" aria-hidden="true"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <ul class="nav-dropdown-menu">
+          <li><a href="income-smoothing.html"><span class="dm-num">1</span>Income Smoothing</a></li>
+          <li><a href="smart-spending.html"><span class="dm-num">2</span>Smart Spending</a></li>
+          <li><a href="five-year-stability.html"><span class="dm-num">3</span>5-Year Stability</a></li>
+          <li><a href="credit-readiness.html"><span class="dm-num">4</span>Credit Readiness</a></li>
+          <li><a href="tax-management.html"><span class="dm-num">5</span>Tax Management</a></li>
+        </ul>
+      </li>
       <li><a href="events.html">Events</a></li>
       <li><a href="#" data-open-modal class="nav-cta">Get Started</a></li>
     </ul>
@@ -318,6 +331,14 @@
     window.addEventListener('scroll', () => {
       nav.classList.toggle('nav--scrolled', window.scrollY > 50);
     }, { passive: true });
+
+    // Modules Dropdown
+    const ddBtn = document.querySelector('.nav-dropdown-btn');
+    const ddItem = document.querySelector('.nav-dropdown');
+    if (ddBtn && ddItem) {
+      ddBtn.addEventListener('click', e => { e.stopPropagation(); const o = ddItem.classList.toggle('open'); ddBtn.setAttribute('aria-expanded', o); });
+      document.addEventListener('click', e => { if (!ddItem.contains(e.target)) { ddItem.classList.remove('open'); ddBtn.setAttribute('aria-expanded', 'false'); } });
+    }
 
     // ── Modal ─────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Credit Readiness Strategy — Lumpy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <style>
+    :root { --orange: hsl(19,81%,53%); --orange-dk: hsl(19,81%,44%); --green: hsl(91,51%,56%); --beige: hsl(53,31%,71%); --sky: hsl(197,73%,73%); --black: hsl(0,0%,7%); --cream: hsl(45,45%,96%); --white: hsl(0,0%,100%); --text: hsl(0,0%,7%); --muted: hsl(0,0%,40%); --radius: 24px; --radius-sm: 12px; --shadow: 0 4px 12px rgba(0,0,0,0.05),0 1px 4px rgba(0,0,0,0.03); --shadow-lg: 0 20px 40px rgba(0,0,0,0.08),0 6px 12px rgba(0,0,0,0.04); }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: 'Nunito', sans-serif; color: var(--text); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    .label { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: var(--beige); color: var(--black); padding: 4px 14px; border-radius: 100px; margin-bottom: 1.2rem; }
+    .label--light { background: rgba(255,255,255,0.25); color: var(--white); }
+    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; }
+    .nav-logo img { height: 40px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+    .nav-links a { text-decoration: none; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem; color: var(--muted); transition: color 0.2s; position: relative; padding-bottom: 3px; }
+    .nav-cta { background: var(--orange); color: var(--white) !important; padding: 8px 22px; border-radius: 100px; }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.2,1,0.3,1), transform 0.8s cubic-bezier(0.2,1,0.3,1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.8s cubic-bezier(0.2,1,0.3,1), transform 0.8s cubic-bezier(0.2,1,0.3,1); }
+    .reveal-left.active { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity 0.8s cubic-bezier(0.2,1,0.3,1), transform 0.8s cubic-bezier(0.2,1,0.3,1); }
+    .reveal-right.active { opacity: 1; transform: translateX(0); }
+    .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.2s; } .stagger-3 { transition-delay: 0.3s; } .stagger-4 { transition-delay: 0.4s; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.5); backdrop-filter: blur(14px); display: flex; align-items: center; justify-content: center; padding: 1.5rem; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-card { background: var(--white); border-radius: var(--radius); padding: clamp(2rem,5vw,3rem); max-width: 480px; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.35); position: relative; transform: translateY(20px) scale(0.98); transition: transform 0.3s cubic-bezier(0.2,1,0.3,1); }
+    .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+    .modal-close { position: absolute; top: 1.25rem; right: 1.25rem; width: 32px; height: 32px; border-radius: 50%; background: var(--cream); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-card h2 { font-size: clamp(1.5rem,3vw,2rem); font-weight: 800; margin-bottom: 0.4rem; }
+    .modal-sub { color: var(--muted); margin-bottom: 1.75rem; font-size: 1rem; }
+    .m-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 1.2rem; }
+    .m-field label { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 0.88rem; }
+    .m-field input, .m-field select { width: 100%; padding: 13px 16px; border: 2px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-size: 1rem; background: var(--cream); color: var(--text); outline: none; appearance: none; transition: border-color 0.2s; }
+    .m-field input:focus, .m-field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px hsla(19,81%,53%,0.14); }
+    .m-field input.invalid, .m-field select.invalid { border-color: hsl(0,80%,55%); }
+    .m-select-wrap { position: relative; }
+    .m-select-wrap::after { content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 10px; height: 6px; background: var(--muted); clip-path: polygon(0 0,100% 0,50% 100%); pointer-events: none; }
+    .m-field-error { font-size: 0.8rem; color: hsl(0,80%,55%); min-height: 1em; }
+    .m-optional { font-family: 'Nunito', sans-serif; font-weight: 400; font-size: 0.78rem; color: var(--muted); }
+    .m-form-error { font-size: 0.88rem; color: hsl(0,80%,55%); text-align: center; margin-bottom: 0.75rem; min-height: 1.2em; }
+    .m-submit { width: 100%; font-family: 'Baloo 2', cursive; font-size: 1.05rem; font-weight: 700; padding: 16px; border-radius: 100px; background: var(--orange); color: var(--white); border: none; cursor: pointer; transition: background 0.15s, transform 0.15s; }
+    .m-submit:hover:not(:disabled) { background: var(--orange-dk); transform: translateY(-2px); }
+    .m-submit:disabled { opacity: 0.65; pointer-events: none; }
+    .m-spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: m-spin 0.7s linear infinite; margin-left: 8px; vertical-align: middle; }
+    @keyframes m-spin { to { transform: rotate(360deg); } }
+    .nav-toggle { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-sm); z-index: 201; }
+    .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--black); border-radius: 2px; transition: transform 0.3s ease, opacity 0.3s ease; }
+    @media (max-width: 600px) {
+      .nav-toggle { display: flex; }
+      .nav-links { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(16px); flex-direction: column; align-items: center; justify-content: center; gap: 2rem; z-index: 200; }
+      .nav-links.open { display: flex; }
+      .nav-links a { font-size: 1.6rem; color: var(--black); }
+    }
+  </style>
+  <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
+  <style>
+    .btn { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; padding: 14px 34px; border-radius: 100px; cursor: pointer; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; border: none; line-height: 1; }
+    .btn--primary { background: var(--orange); color: var(--white); }
+    .btn--primary:hover { background: var(--orange-dk); transform: translateY(-3px); box-shadow: 0 12px 32px -4px rgba(232,100,40,0.4); }
+    .btn--outline { background: transparent; color: var(--white); border: 2.5px solid rgba(255,255,255,0.5); }
+    .btn--outline:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+    .btn--dark { background: var(--black); color: var(--white); }
+    .btn--dark:hover { background: #2a2a2a; transform: translateY(-2px); }
+    .btn--lg { font-size: 1.15rem; padding: 18px 44px; }
+
+    /* Hero — sky blue accent */
+    .module-hero {
+      position: relative;
+      background: var(--sky);
+      overflow: hidden;
+      padding: 120px 0 100px;
+    }
+    .module-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(at 90% 10%, hsla(197,73%,55%,0.4) 0, transparent 50%), radial-gradient(at 10% 90%, hsla(197,73%,90%,0.5) 0, transparent 50%);
+      z-index: 0;
+    }
+    .module-hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .module-badge { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Baloo 2', cursive; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: rgba(0,0,0,0.1); color: var(--black); padding: 6px 16px; border-radius: 100px; margin-bottom: 1.5rem; }
+    .module-num { width: 22px; height: 22px; border-radius: 50%; background: var(--black); color: var(--white); font-size: 0.75rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .module-hero h1 { font-size: clamp(2.4rem,5.5vw,4rem); font-weight: 900; color: var(--black); margin-bottom: 1.25rem; letter-spacing: -0.03em; line-height: 1.05; }
+    .module-hero h1 em { font-style: normal; color: var(--orange); }
+    .module-hero-text > p { font-size: 1.1rem; color: rgba(0,0,0,0.65); line-height: 1.75; margin-bottom: 2rem; }
+    .module-hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn--sky-dark { background: var(--black); color: var(--white); padding: 14px 34px; border-radius: 100px; font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; text-decoration: none; display: inline-block; transition: transform 0.15s, background 0.15s; }
+    .btn--sky-dark:hover { background: #2a2a2a; transform: translateY(-2px); }
+    .btn--sky-ghost { background: transparent; color: var(--black); border: 2.5px solid rgba(0,0,0,0.25); padding: 14px 34px; border-radius: 100px; font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; text-decoration: none; display: inline-block; transition: border-color 0.15s, transform 0.15s; }
+    .btn--sky-ghost:hover { border-color: var(--black); transform: translateY(-2px); }
+    .score-card { background: var(--white); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow-lg); }
+    .score-title { font-family: 'Baloo 2', cursive; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+    .score-bands { display: flex; flex-direction: column; gap: 0.6rem; }
+    .score-band { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); }
+    .score-band-range { font-family: 'Baloo 2', cursive; font-size: 0.9rem; font-weight: 800; min-width: 80px; }
+    .score-band-label { font-size: 0.85rem; font-weight: 600; flex: 1; }
+    .score-band-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sb--decline { background: hsl(0,60%,95%); } .sb--decline .score-band-range { color: hsl(0,60%,50%); } .sb--decline .score-band-dot { background: hsl(0,60%,55%); }
+    .sb--min { background: hsl(30,80%,95%); } .sb--min .score-band-range { color: hsl(30,80%,45%); } .sb--min .score-band-dot { background: hsl(30,80%,50%); }
+    .sb--ok { background: hsl(50,80%,94%); } .sb--ok .score-band-range { color: hsl(50,80%,38%); } .sb--ok .score-band-dot { background: hsl(50,70%,45%); }
+    .sb--good { background: hsl(91,51%,92%); } .sb--good .score-band-range { color: hsl(91,51%,36%); } .sb--good .score-band-dot { background: var(--green); }
+    .sb--excellent { background: hsl(140,50%,90%); } .sb--excellent .score-band-range { color: hsl(140,50%,30%); } .sb--excellent .score-band-dot { background: hsl(140,50%,40%); }
+
+    .infographic-section { background: var(--white); padding: 80px 0; }
+    .infographic-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .infographic-copy h2 { font-size: clamp(1.8rem,3.5vw,2.8rem); font-weight: 800; margin-bottom: 1rem; }
+    .infographic-copy p { font-size: 1.05rem; color: var(--muted); line-height: 1.75; margin-bottom: 1rem; }
+    .infographic-copy strong { color: var(--black); }
+    .infographic-img img { border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; }
+
+    .docs-section { background: var(--black); padding: 100px 0; }
+    .docs-header { text-align: center; margin-bottom: 3.5rem; }
+    .docs-header h2 { font-size: clamp(2rem,4vw,3rem); font-weight: 800; color: var(--white); margin-bottom: 0.75rem; }
+    .docs-header p { color: rgba(255,255,255,0.5); max-width: 600px; margin: 0 auto; }
+    .docs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    .doc-card { background: #1a1a1a; border-radius: var(--radius); padding: 1.75rem 1.5rem; border-left: 3px solid var(--sky); transition: transform 0.25s ease; }
+    .doc-card:hover { transform: translateY(-4px); background: #222; }
+    .doc-card h4 { font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 800; color: var(--white); margin-bottom: 0.4rem; }
+    .doc-card .doc-min { font-size: 0.8rem; color: var(--sky); font-weight: 700; margin-bottom: 0.5rem; font-family: 'Baloo 2', cursive; }
+    .doc-card p { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+    .paradox-box { background: #111; border-radius: var(--radius); padding: 2.5rem; border: 1px solid rgba(255,255,255,0.06); max-width: 780px; margin: 2rem auto 0; }
+    .paradox-box h3 { font-family: 'Baloo 2', cursive; font-size: 1.2rem; font-weight: 800; color: var(--orange); margin-bottom: 0.75rem; }
+    .paradox-box p { font-size: 0.95rem; color: rgba(255,255,255,0.6); line-height: 1.75; }
+
+    .dti-section { background: var(--cream); padding: 100px 0; }
+    .dti-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .dti-copy h2 { font-size: clamp(1.8rem,3.5vw,2.8rem); font-weight: 800; margin-bottom: 1.25rem; }
+    .dti-copy p { font-size: 1.05rem; color: var(--muted); line-height: 1.75; margin-bottom: 1rem; }
+    .dti-copy strong { color: var(--black); }
+    .dti-visual { background: var(--white); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow-lg); }
+    .dti-title { font-family: 'Baloo 2', cursive; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+    .dti-example { background: var(--cream); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1rem; }
+    .dti-example-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 0.5rem; font-family: 'Baloo 2', cursive; text-transform: uppercase; letter-spacing: 0.08em; }
+    .dti-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 600; padding: 0.3rem 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .dti-row:last-child { border: none; }
+    .dti-row-val { font-family: 'Baloo 2', cursive; font-weight: 800; }
+    .dti-row-val--ok { color: var(--green); }
+    .dti-row-val--warn { color: var(--orange); }
+    .dti-bar-wrap { margin-top: 1rem; }
+    .dti-bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); font-weight: 600; margin-bottom: 0.4rem; }
+    .dti-bar-bg { height: 12px; background: rgba(0,0,0,0.06); border-radius: 100px; overflow: hidden; }
+    .dti-bar-fill { height: 100%; border-radius: 100px; }
+    .dti-bar-fill--ok { width: 37%; background: var(--orange); }
+    .dti-guideline { font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; text-align: right; }
+
+    .cta-section { background: var(--orange); padding: 100px 0; text-align: center; position: relative; overflow: hidden; }
+    .cta-bg { position: absolute; inset: 0; background-image: url('Final Assets/optimized/bg.jpg'); background-size: cover; opacity: 0.15; }
+    .cta-content { position: relative; z-index: 2; }
+    .cta-content h2 { font-size: clamp(2.2rem,5vw,3.8rem); font-weight: 900; color: var(--white); margin-bottom: 1rem; }
+    .cta-content p { font-size: 1.2rem; color: rgba(255,255,255,0.9); max-width: 540px; margin: 0 auto 2.5rem; line-height: 1.7; }
+    .footer { background: var(--black); padding: 2.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .footer img { height: 32px; width: auto; opacity: 0.8; }
+    .footer-copy { font-size: 0.875rem; color: rgba(255,255,255,0.4); font-weight: 500; }
+
+    @media (max-width: 900px) {
+      .module-hero-inner, .infographic-inner, .dti-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+      .docs-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .docs-grid { grid-template-columns: 1fr; }
+      .footer { flex-direction: column; align-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <a href="index.html">
+        <img src="Final Assets/optimized/logo-horizontal.png" alt="Lumpy" width="194" height="40" />
+      </a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-dropdown-btn" aria-expanded="false">
+          Modules
+          <svg width="10" height="7" viewBox="0 0 10 7" fill="none" aria-hidden="true"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <ul class="nav-dropdown-menu">
+          <li><a href="income-smoothing.html"><span class="dm-num">1</span>Income Smoothing</a></li>
+          <li><a href="smart-spending.html"><span class="dm-num">2</span>Smart Spending</a></li>
+          <li><a href="five-year-stability.html"><span class="dm-num">3</span>5-Year Stability</a></li>
+          <li><a href="credit-readiness.html"><span class="dm-num">4</span>Credit Readiness</a></li>
+          <li><a href="tax-management.html"><span class="dm-num">5</span>Tax Management</a></li>
+        </ul>
+      </li>
+      <li><a href="events.html">Events</a></li>
+      <li><a href="#" data-open-modal class="nav-cta">Get Started</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="module-hero">
+    <div class="container">
+      <div class="module-hero-inner">
+        <div class="module-hero-text">
+          <div class="module-badge reveal">
+            <span class="module-num">4</span>
+            Module 4 of 5
+          </div>
+          <h1 class="reveal stagger-1">Irregular income is not a barrier to credit.<br /><em>The right documentation is.</em></h1>
+          <p class="reveal stagger-2">The South African credit system was built for the salaried employee. Lumpies must prove their financial strength through documentation rather than a payslip. This module builds that documentation — systematically.</p>
+          <div class="module-hero-ctas reveal stagger-3">
+            <a href="#" data-open-modal class="btn--sky-dark btn--lg">Join the Waitlist</a>
+            <a href="#docs" class="btn--sky-ghost">See the Framework</a>
+          </div>
+        </div>
+        <div class="score-card reveal-right">
+          <div class="score-title">South African credit score guide</div>
+          <div class="score-bands">
+            <div class="score-band sb--decline">
+              <span class="score-band-dot"></span>
+              <span class="score-band-range">Below 610</span>
+              <span class="score-band-label">Most banks will decline. Focus on rebuilding first.</span>
+            </div>
+            <div class="score-band sb--min">
+              <span class="score-band-dot"></span>
+              <span class="score-band-range">610 – 649</span>
+              <span class="score-band-label">Minimum threshold. Approval possible but unfavourable rates.</span>
+            </div>
+            <div class="score-band sb--ok">
+              <span class="score-band-dot"></span>
+              <span class="score-band-range">650 – 699</span>
+              <span class="score-band-label">Acceptable range. Approval likely with strong documentation.</span>
+            </div>
+            <div class="score-band sb--good">
+              <span class="score-band-dot"></span>
+              <span class="score-band-range">700 – 749</span>
+              <span class="score-band-label">Good. Qualifies for competitive rates at most banks.</span>
+            </div>
+            <div class="score-band sb--excellent">
+              <span class="score-band-dot"></span>
+              <span class="score-band-range">750+</span>
+              <span class="score-band-label">Excellent. Best rates and highest approval likelihood.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFOGRAPHIC -->
+  <section class="infographic-section">
+    <div class="container">
+      <div class="infographic-inner">
+        <div class="infographic-copy reveal-left">
+          <span class="label">Your step-by-step guide</span>
+          <h2>Know your gaps before the bank does.</h2>
+          <p>The Credit Readiness Strategy addresses the five areas lenders assess: your profile and credit goal, income proof documentation, your debt-to-income ratio, deposit and assets, and your overall readiness score.</p>
+          <p>By the end you understand exactly what South African lenders look for in a self-employed applicant, where your current gaps are, and the <strong>specific steps to take</strong> to present your strongest possible case.</p>
+        </div>
+        <div class="infographic-img reveal-right">
+          <img src="Pages/LUMPY 4.png" alt="Credit Readiness Strategy infographic" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INCOME DOCUMENTS -->
+  <section class="docs-section" id="docs">
+    <div class="container">
+      <div class="docs-header">
+        <span class="label label--light reveal">Step 2 — Income proof</span>
+        <h2 class="reveal stagger-1">The five income documents lenders need.</h2>
+        <p class="reveal stagger-2">A salaried employee hands over a payslip. You hand over a documentation pack. The quality and completeness of that pack determines whether a bank can assess your income reliably.</p>
+      </div>
+      <div class="docs-grid">
+        <div class="doc-card reveal stagger-1">
+          <div class="doc-min">2 consecutive years</div>
+          <h4>SARS Tax Assessments (ITA34)</h4>
+          <p>The primary income verification document. Banks trust it because it's independently verified by SARS. This is the single most important document you need.</p>
+        </div>
+        <div class="doc-card reveal stagger-2">
+          <div class="doc-min">2 years, accountant-signed</div>
+          <h4>Signed Financial Statements</h4>
+          <p>Profit and loss statement and balance sheet prepared by a registered accountant. Shows income, expenses, and net profit in a format lenders understand.</p>
+        </div>
+        <div class="doc-card reveal stagger-3">
+          <div class="doc-min">6 months min, 12 preferred</div>
+          <h4>Personal & Business Bank Statements</h4>
+          <p>Shows consistent income deposits matching declared income. Lenders look for regular, verifiable deposits over time — not a single large payment.</p>
+        </div>
+        <div class="doc-card reveal stagger-1">
+          <div class="doc-min">Required — not optional</div>
+          <h4>Separate Business Bank Account</h4>
+          <p>Allows the lender to see business income and expenses cleanly. Mixed personal and business transactions make income impossible to verify accurately.</p>
+        </div>
+        <div class="doc-card reveal stagger-2">
+          <div class="doc-min">24 months minimum</div>
+          <h4>2+ Years of Trading History</h4>
+          <p>Demonstrates income sustainability. A Lumpy who has traded consistently for 3+ years is seen as significantly lower risk than someone self-employed for 6 months.</p>
+        </div>
+        <div class="doc-card reveal stagger-3">
+          <div class="doc-min">The critical insight</div>
+          <h4>The Tax Minimisation Paradox</h4>
+          <p>More deductions = lower taxable income = stronger tax position but weaker income declaration for lenders. Start managing this balance 2 years before applying.</p>
+        </div>
+      </div>
+      <div class="paradox-box reveal">
+        <h3>The documentation timeline</h3>
+        <p>Most of your income documentation cannot be created quickly — it must be built over time. A Lumpy who wants a home loan in 24 months needs to start maintaining meticulous records <em>now</em>. File tax returns on time, commission annual financial statements, keep six months of bank statements organised, and open a dedicated business account today.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEBT TO INCOME -->
+  <section class="dti-section">
+    <div class="container">
+      <div class="dti-inner">
+        <div class="dti-copy reveal-left">
+          <span class="label">Step 3 — Debt & credit</span>
+          <h2>Know your debt-to-income ratio before the bank calculates it.</h2>
+          <p>The National Credit Act requires lenders to conduct an affordability assessment before approving any credit. The two most critical metrics are your debt-to-income ratio and your credit record.</p>
+          <p>The NCA guideline is <strong>30%</strong> — your total debt repayments should not exceed 30% of your gross monthly income. The module calculates this for you and shows exactly how each existing obligation affects your application odds.</p>
+          <p>The most effective way to improve your ratio is to reduce existing debt before applying. Identify your highest-interest short-term obligations and pay them off first. <strong>Do not take on any new debt in the 12–24 months before a major application.</strong></p>
+        </div>
+        <div class="dti-visual reveal-right">
+          <div class="dti-title">Debt-to-income calculator — example</div>
+          <div class="dti-example">
+            <div class="dti-example-label">Your numbers</div>
+            <div class="dti-row"><span>Smoothed monthly income</span><span class="dti-row-val">R35,000</span></div>
+            <div class="dti-row"><span>Existing debt repayments</span><span class="dti-row-val">R5,000</span></div>
+            <div class="dti-row"><span>Proposed bond repayment</span><span class="dti-row-val">R8,000</span></div>
+            <div class="dti-row" style="padding-top:0.5rem;border-top:2px solid rgba(0,0,0,0.1)">
+              <span style="font-weight:700">Total debt-to-income ratio</span>
+              <span class="dti-row-val dti-row-val--warn">37%</span>
+            </div>
+          </div>
+          <div class="dti-bar-wrap">
+            <div class="dti-bar-label"><span>0%</span><span style="color:var(--orange);font-weight:700">NCA guideline: 30%</span><span>50%</span></div>
+            <div class="dti-bar-bg"><div class="dti-bar-fill dti-bar-fill--ok"></div></div>
+            <div class="dti-guideline">37% exceeds guideline — reduce existing debt before applying</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-bg"></div>
+    <div class="container cta-content">
+      <span class="label label--light reveal">Ready to qualify?</span>
+      <h2 class="reveal stagger-1">Build your credit readiness before you need it.</h2>
+      <p class="reveal stagger-2">Join the Lumpy waitlist and be first to access the Credit Readiness Strategy when we launch.</p>
+      <a href="#" data-open-modal class="btn btn--dark btn--lg reveal stagger-3">Join the Waitlist</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <img src="Final Assets/optimized/logo-white.png" alt="Lumpy" loading="lazy" width="155" height="32" />
+    <p class="footer-copy">© 2024 Lumpy. Built for irregular income.</p>
+  </footer>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="signup-modal" role="dialog" aria-modal="true" aria-label="Join Lumpy">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <span class="label">Step 1 of 2</span>
+      <h2>Let's get started</h2>
+      <p class="modal-sub">Tell us a little about yourself.</p>
+      <form id="modal-form" novalidate>
+        <div class="m-field"><label for="m-name">Full name</label><input type="text" id="m-name" placeholder="Your full name" required autocomplete="name" /><span class="m-field-error" id="m-name-err"></span></div>
+        <div class="m-field"><label for="m-email">Email address</label><input type="email" id="m-email" placeholder="you@example.com" required autocomplete="email" /><span class="m-field-error" id="m-email-err"></span></div>
+        <div class="m-field"><label for="m-phone">Phone <span class="m-optional">(optional)</span></label><input type="tel" id="m-phone" placeholder="+27 000 000 0000" autocomplete="tel" /></div>
+        <div class="m-field"><label for="m-referral">How did you hear about Lumpy?</label><div class="m-select-wrap"><select id="m-referral" required><option value="" disabled selected>Select one…</option><option value="social_media">Social media</option><option value="friend_referral">Friend / referral</option><option value="google">Google</option><option value="other">Other</option></select></div><span class="m-field-error" id="m-referral-err"></span></div>
+        <p class="m-form-error" id="m-form-err"></p>
+        <button type="submit" class="m-submit" id="m-submit">Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('active'); observer.unobserve(entry.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    navToggle.addEventListener('click', () => { const isOpen = navLinks.classList.toggle('open'); navToggle.setAttribute('aria-expanded', isOpen); document.body.style.overflow = isOpen ? 'hidden' : ''; });
+    navLinks.querySelectorAll('a').forEach(link => { link.addEventListener('click', () => { navLinks.classList.remove('open'); navToggle.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; }); });
+    const nav = document.querySelector('.nav');
+    window.addEventListener('scroll', () => { nav.classList.toggle('nav--scrolled', window.scrollY > 50); }, { passive: true });
+    const ddBtn = document.querySelector('.nav-dropdown-btn');
+    const ddItem = document.querySelector('.nav-dropdown');
+    if (ddBtn && ddItem) {
+      ddBtn.addEventListener('click', e => { e.stopPropagation(); const o = ddItem.classList.toggle('open'); ddBtn.setAttribute('aria-expanded', o); });
+      document.addEventListener('click', e => { if (!ddItem.contains(e.target)) { ddItem.classList.remove('open'); ddBtn.setAttribute('aria-expanded', 'false'); } });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalOverlay = document.getElementById('signup-modal');
+      window.openModal = function() { modalOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; setTimeout(() => document.getElementById('m-name').focus(), 300); };
+      window.closeModal = function() { modalOverlay.classList.remove('open'); document.body.style.overflow = ''; };
+      document.querySelectorAll('[data-open-modal]').forEach(el => { el.addEventListener('click', (e) => { e.preventDefault(); openModal(); }); });
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal(); });
+    });
+  </script>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
+    const SUPABASE_URL = 'https://rwvzstjsluchajwacwgz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dnpzdGpzbHVjaGFqd2Fjd2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjI2OTcsImV4cCI6MjA5MTI5ODY5N30.IqR8KwUYTfenqaopg30UmRHRbFO5oZI9TmotAGi3xqw';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form = document.getElementById('modal-form');
+    const submitBtn = document.getElementById('m-submit');
+    function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+    function validate(id, errId, check, msg) { const el = document.getElementById(id), er = document.getElementById(errId); if (!check(el.value.trim())) { el.classList.add('invalid'); er.textContent = msg; return false; } el.classList.remove('invalid'); er.textContent = ''; return true; }
+    document.getElementById('m-name').addEventListener('blur', () => validate('m-name','m-name-err',v=>v.length>=2,'Please enter your full name.'));
+    document.getElementById('m-email').addEventListener('blur', () => validate('m-email','m-email-err',isValidEmail,'Please enter a valid email address.'));
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ok1 = validate('m-name','m-name-err',v=>v.length>=2,'Please enter your full name.');
+      const ok2 = validate('m-email','m-email-err',isValidEmail,'Please enter a valid email address.');
+      const ok3 = validate('m-referral','m-referral-err',v=>v!=='','Please select an option.');
+      if (!ok1||!ok2||!ok3) return;
+      const name = document.getElementById('m-name').value.trim();
+      const email = document.getElementById('m-email').value.trim().toLowerCase();
+      const phone = document.getElementById('m-phone').value.trim() || null;
+      const referral = document.getElementById('m-referral').value;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Saving… <span class="m-spinner"></span>';
+      const { error } = await supabase.from('signups').insert({ name, email, phone, referral_source: referral });
+      if (error) console.error('Supabase:', error.code, error.message);
+      window.location.href = 'qualify.html?email=' + encodeURIComponent(email);
+    });
+  </script>
+  <script src="lightbox.js"></script>
+</body>
+</html>

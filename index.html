@@ -208,6 +208,19 @@
     <ul class="nav-links">
       <li><a href="index.html" class="active">Home</a></li>
       <li><a href="about.html">About</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-dropdown-btn" aria-expanded="false">
+          Modules
+          <svg width="10" height="7" viewBox="0 0 10 7" fill="none" aria-hidden="true"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <ul class="nav-dropdown-menu">
+          <li><a href="income-smoothing.html"><span class="dm-num">1</span>Income Smoothing</a></li>
+          <li><a href="smart-spending.html"><span class="dm-num">2</span>Smart Spending</a></li>
+          <li><a href="five-year-stability.html"><span class="dm-num">3</span>5-Year Stability</a></li>
+          <li><a href="credit-readiness.html"><span class="dm-num">4</span>Credit Readiness</a></li>
+          <li><a href="tax-management.html"><span class="dm-num">5</span>Tax Management</a></li>
+        </ul>
+      </li>
       <li><a href="events.html">Events</a></li>
       <li><a href="#" data-open-modal class="nav-cta">Get Started</a></li>
     </ul>
@@ -299,38 +312,44 @@
     </div>
   </section>
 
-  <!-- VALUE CARDS -->
-  <section class="value section">
+  <!-- VALUE CARDS / MODULES -->
+  <section class="value section" id="modules">
     <div class="container">
       <div class="value-header">
         <span class="label">What you get</span>
-        <h2>Everything you need to master irregular income</h2>
+        <h2>Five modules. One complete system.</h2>
       </div>
-      <div class="cards">
-        <div class="card reveal reveal-up stagger-1">
+      <div class="cards" style="grid-template-columns: repeat(5, 1fr);">
+        <a href="income-smoothing.html" class="card reveal reveal-up stagger-1" style="text-decoration:none;">
           <div class="card-dot"></div>
           <span class="card-num">1</span>
           <h3>Income Smoothing System</h3>
-          <p>Turn unpredictable earnings into consistent living</p>
-        </div>
-        <div class="card reveal reveal-up stagger-2">
+          <p>Turn unpredictable earnings into a stable monthly salary</p>
+        </a>
+        <a href="smart-spending.html" class="card reveal reveal-up stagger-2" style="text-decoration:none;">
           <div class="card-dot"></div>
           <span class="card-num">2</span>
           <h3>Smart Spending Framework</h3>
           <p>Spend confidently — even in low-income months</p>
-        </div>
-        <div class="card reveal reveal-up stagger-3">
+        </a>
+        <a href="five-year-stability.html" class="card reveal reveal-up stagger-3" style="text-decoration:none;">
           <div class="card-dot"></div>
           <span class="card-num">3</span>
           <h3>5-Year Stability Plan</h3>
           <p>Build real security — not just survive month-to-month</p>
-        </div>
-        <div class="card reveal reveal-up stagger-4">
+        </a>
+        <a href="credit-readiness.html" class="card reveal reveal-up stagger-4" style="text-decoration:none;">
           <div class="card-dot"></div>
           <span class="card-num">4</span>
           <h3>Credit Readiness Strategy</h3>
           <p>Prove your financial strength — even without a fixed salary</p>
-        </div>
+        </a>
+        <a href="tax-management.html" class="card reveal reveal-up stagger-1" style="text-decoration:none;">
+          <div class="card-dot"></div>
+          <span class="card-num">5</span>
+          <h3>Tax Management System</h3>
+          <p>Never pay more tax than you owe — or less than you've saved</p>
+        </a>
       </div>
     </div>
   </section>
@@ -522,6 +541,14 @@
     window.addEventListener('scroll', () => {
       nav.classList.toggle('nav--scrolled', window.scrollY > 50);
     }, { passive: true });
+
+    // Modules Dropdown
+    const ddBtn = document.querySelector('.nav-dropdown-btn');
+    const ddItem = document.querySelector('.nav-dropdown');
+    if (ddBtn && ddItem) {
+      ddBtn.addEventListener('click', e => { e.stopPropagation(); const o = ddItem.classList.toggle('open'); ddBtn.setAttribute('aria-expanded', o); });
+      document.addEventListener('click', e => { if (!ddItem.contains(e.target)) { ddItem.classList.remove('open'); ddBtn.setAttribute('aria-expanded', 'false'); } });
+    }
 
     // Animate Dial on Reveal
     const dialObserver = new IntersectionObserver((entries) => {

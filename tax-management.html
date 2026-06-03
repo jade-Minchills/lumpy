@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tax Management System — Lumpy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <style>
+    :root { --orange: hsl(19,81%,53%); --orange-dk: hsl(19,81%,44%); --green: hsl(91,51%,56%); --beige: hsl(53,31%,71%); --sky: hsl(197,73%,73%); --black: hsl(0,0%,7%); --cream: hsl(45,45%,96%); --white: hsl(0,0%,100%); --text: hsl(0,0%,7%); --muted: hsl(0,0%,40%); --radius: 24px; --radius-sm: 12px; --shadow: 0 4px 12px rgba(0,0,0,0.05),0 1px 4px rgba(0,0,0,0.03); --shadow-lg: 0 20px 40px rgba(0,0,0,0.08),0 6px 12px rgba(0,0,0,0.04); }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: 'Nunito', sans-serif; color: var(--text); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    .label { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: var(--beige); color: var(--black); padding: 4px 14px; border-radius: 100px; margin-bottom: 1.2rem; }
+    .label--light { background: rgba(255,255,255,0.25); color: var(--white); }
+    .nav { position: sticky; top: 0; z-index: 200; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; }
+    .nav-logo img { height: 40px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+    .nav-links a { text-decoration: none; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem; color: var(--muted); transition: color 0.2s; position: relative; padding-bottom: 3px; }
+    .nav-cta { background: var(--orange); color: var(--white) !important; padding: 8px 22px; border-radius: 100px; }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.2,1,0.3,1), transform 0.8s cubic-bezier(0.2,1,0.3,1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.8s cubic-bezier(0.2,1,0.3,1), transform 0.8s cubic-bezier(0.2,1,0.3,1); }
+    .reveal-left.active { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity 0.8s cubic-bezier(0.2,1,0.3,1), transform 0.8s cubic-bezier(0.2,1,0.3,1); }
+    .reveal-right.active { opacity: 1; transform: translateX(0); }
+    .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.2s; } .stagger-3 { transition-delay: 0.3s; } .stagger-4 { transition-delay: 0.4s; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.5); backdrop-filter: blur(14px); display: flex; align-items: center; justify-content: center; padding: 1.5rem; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-card { background: var(--white); border-radius: var(--radius); padding: clamp(2rem,5vw,3rem); max-width: 480px; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.35); position: relative; transform: translateY(20px) scale(0.98); transition: transform 0.3s cubic-bezier(0.2,1,0.3,1); }
+    .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+    .modal-close { position: absolute; top: 1.25rem; right: 1.25rem; width: 32px; height: 32px; border-radius: 50%; background: var(--cream); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-card h2 { font-size: clamp(1.5rem,3vw,2rem); font-weight: 800; margin-bottom: 0.4rem; }
+    .modal-sub { color: var(--muted); margin-bottom: 1.75rem; font-size: 1rem; }
+    .m-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 1.2rem; }
+    .m-field label { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 0.88rem; }
+    .m-field input, .m-field select { width: 100%; padding: 13px 16px; border: 2px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-size: 1rem; background: var(--cream); color: var(--text); outline: none; appearance: none; transition: border-color 0.2s; }
+    .m-field input:focus, .m-field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px hsla(19,81%,53%,0.14); }
+    .m-field input.invalid, .m-field select.invalid { border-color: hsl(0,80%,55%); }
+    .m-select-wrap { position: relative; }
+    .m-select-wrap::after { content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 10px; height: 6px; background: var(--muted); clip-path: polygon(0 0,100% 0,50% 100%); pointer-events: none; }
+    .m-field-error { font-size: 0.8rem; color: hsl(0,80%,55%); min-height: 1em; }
+    .m-optional { font-family: 'Nunito', sans-serif; font-weight: 400; font-size: 0.78rem; color: var(--muted); }
+    .m-form-error { font-size: 0.88rem; color: hsl(0,80%,55%); text-align: center; margin-bottom: 0.75rem; min-height: 1.2em; }
+    .m-submit { width: 100%; font-family: 'Baloo 2', cursive; font-size: 1.05rem; font-weight: 700; padding: 16px; border-radius: 100px; background: var(--orange); color: var(--white); border: none; cursor: pointer; transition: background 0.15s, transform 0.15s; }
+    .m-submit:hover:not(:disabled) { background: var(--orange-dk); transform: translateY(-2px); }
+    .m-submit:disabled { opacity: 0.65; pointer-events: none; }
+    .m-spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: m-spin 0.7s linear infinite; margin-left: 8px; vertical-align: middle; }
+    @keyframes m-spin { to { transform: rotate(360deg); } }
+    .nav-toggle { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-sm); z-index: 201; }
+    .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--black); border-radius: 2px; transition: transform 0.3s ease, opacity 0.3s ease; }
+    @media (max-width: 600px) {
+      .nav-toggle { display: flex; }
+      .nav-links { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(16px); flex-direction: column; align-items: center; justify-content: center; gap: 2rem; z-index: 200; }
+      .nav-links.open { display: flex; }
+      .nav-links a { font-size: 1.6rem; color: var(--black); }
+    }
+  </style>
+  <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
+  <style>
+    .btn { display: inline-block; font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; padding: 14px 34px; border-radius: 100px; cursor: pointer; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; border: none; line-height: 1; }
+    .btn--primary { background: var(--orange); color: var(--white); }
+    .btn--primary:hover { background: var(--orange-dk); transform: translateY(-3px); box-shadow: 0 12px 32px -4px rgba(232,100,40,0.4); }
+    .btn--outline { background: transparent; color: var(--white); border: 2.5px solid rgba(255,255,255,0.5); }
+    .btn--outline:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+    .btn--dark { background: var(--black); color: var(--white); }
+    .btn--dark:hover { background: #2a2a2a; transform: translateY(-2px); }
+    .btn--lg { font-size: 1.15rem; padding: 18px 44px; }
+
+    /* Hero — dark, orange accent */
+    .module-hero {
+      position: relative;
+      background: var(--black);
+      overflow: hidden;
+      padding: 120px 0 100px;
+    }
+    .module-hero-mesh {
+      position: absolute; inset: 0; z-index: 1; filter: blur(80px);
+    }
+    .module-hero-mesh::before {
+      content: ''; position: absolute; inset: -25%;
+      background: radial-gradient(at 70% 20%, hsla(19,81%,53%,0.2) 0, transparent 50%), radial-gradient(at 20% 80%, hsla(197,73%,73%,0.12) 0, transparent 50%);
+      animation: mesh-flow 18s ease-in-out infinite alternate;
+    }
+    @keyframes mesh-flow { 0%{transform:scale(1) translate(0,0);} 100%{transform:scale(1.1) translate(20px,-25px);} }
+    .module-hero-inner { position: relative; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .module-badge { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Baloo 2', cursive; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 6px 16px; border-radius: 100px; margin-bottom: 1.5rem; }
+    .module-num { width: 22px; height: 22px; border-radius: 50%; background: var(--orange); color: var(--white); font-size: 0.75rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .module-hero h1 { font-size: clamp(2.4rem,5.5vw,4rem); font-weight: 900; color: var(--white); margin-bottom: 1.25rem; letter-spacing: -0.03em; line-height: 1.05; }
+    .module-hero h1 em { font-style: normal; color: var(--orange); }
+    .module-hero-text > p { font-size: 1.1rem; color: rgba(255,255,255,0.7); line-height: 1.75; margin-bottom: 2rem; }
+    .module-hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .tax-shock-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); padding: 2rem; }
+    .tax-shock-eyebrow { font-family: 'Baloo 2', cursive; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); margin-bottom: 1rem; }
+    .tax-shock-scenario { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .ts-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.9rem; }
+    .ts-row:last-child { border: none; }
+    .ts-label { color: rgba(255,255,255,0.55); }
+    .ts-val { font-family: 'Baloo 2', cursive; font-weight: 800; color: var(--white); }
+    .ts-val--danger { color: hsl(0,75%,65%); }
+    .ts-val--safe { color: var(--green); }
+    .tax-shock-note { font-size: 0.8rem; color: rgba(255,255,255,0.4); line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem; margin-top: 0.5rem; }
+    .tax-shock-note strong { color: var(--orange); }
+
+    /* Entity types */
+    .entity-section { background: var(--cream); padding: 100px 0; }
+    .entity-header { text-align: center; margin-bottom: 3.5rem; }
+    .entity-header h2 { font-size: clamp(2rem,4vw,3rem); font-weight: 800; margin-bottom: 0.75rem; }
+    .entity-header p { color: var(--muted); max-width: 560px; margin: 0 auto; }
+    .entity-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+    .entity-card { background: var(--white); border-radius: var(--radius); padding: 2rem 1.75rem; box-shadow: var(--shadow); border-top: 4px solid; transition: transform 0.25s ease; }
+    .entity-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .entity-card:nth-child(1) { border-color: var(--orange); }
+    .entity-card:nth-child(2) { border-color: var(--green); }
+    .entity-card:nth-child(3) { border-color: var(--sky); }
+    .entity-tag { font-family: 'Baloo 2', cursive; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; display: inline-block; margin-bottom: 0.75rem; }
+    .entity-card:nth-child(1) .entity-tag { background: hsl(19,81%,94%); color: var(--orange); }
+    .entity-card:nth-child(2) .entity-tag { background: hsl(91,51%,90%); color: hsl(91,51%,30%); }
+    .entity-card:nth-child(3) .entity-tag { background: hsl(197,73%,90%); color: hsl(197,73%,30%); }
+    .entity-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .entity-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.65; }
+    .entity-card .entity-rate { font-family: 'Baloo 2', cursive; font-size: 1.4rem; font-weight: 900; margin-top: 1rem; }
+    .entity-card:nth-child(1) .entity-rate { color: var(--orange); }
+    .entity-card:nth-child(2) .entity-rate { color: var(--green); }
+    .entity-card:nth-child(3) .entity-rate { color: var(--sky); }
+
+    /* Deductions */
+    .deductions-section { background: var(--black); padding: 100px 0; }
+    .deductions-header { text-align: center; margin-bottom: 3.5rem; }
+    .deductions-header h2 { font-size: clamp(2rem,4vw,3rem); font-weight: 800; color: var(--white); margin-bottom: 0.75rem; }
+    .deductions-header p { color: rgba(255,255,255,0.5); max-width: 560px; margin: 0 auto; }
+    .deductions-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.25rem; }
+    .deduction-card { background: #1a1a1a; border-radius: var(--radius-sm); padding: 1.5rem; transition: background 0.2s; }
+    .deduction-card:hover { background: #222; }
+    .deduction-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .deduction-card h4 { font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 800; color: var(--white); margin-bottom: 0.4rem; }
+    .deduction-card p { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+    .deductions-rule { background: #111; border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 2rem; text-align: center; margin-top: 2rem; }
+    .deductions-rule p { color: rgba(255,255,255,0.6); font-size: 0.95rem; line-height: 1.7; }
+    .deductions-rule strong { color: var(--orange); }
+
+    /* Calendar */
+    .calendar-section { background: var(--orange); padding: 100px 0; }
+    .calendar-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .calendar-copy h2 { font-size: clamp(1.8rem,3.5vw,2.8rem); font-weight: 800; color: var(--white); margin-bottom: 1.25rem; }
+    .calendar-copy p { font-size: 1.05rem; color: rgba(255,255,255,0.85); line-height: 1.75; margin-bottom: 1rem; }
+    .calendar-visual { background: var(--white); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow-lg); }
+    .cal-title { font-family: 'Baloo 2', cursive; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+    .cal-events { display: flex; flex-direction: column; gap: 0.9rem; }
+    .cal-event { display: flex; align-items: flex-start; gap: 1rem; }
+    .cal-date { font-family: 'Baloo 2', cursive; font-size: 0.8rem; font-weight: 800; color: var(--orange); min-width: 80px; padding-top: 2px; }
+    .cal-event-body h5 { font-family: 'Baloo 2', cursive; font-size: 0.95rem; font-weight: 800; margin-bottom: 0.15rem; }
+    .cal-event-body p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+    .cal-event-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .dot--critical { background: hsl(0,75%,55%); }
+    .dot--important { background: var(--orange); }
+    .dot--regular { background: var(--sky); }
+
+    .cta-section { background: var(--black); padding: 100px 0; text-align: center; }
+    .cta-content h2 { font-size: clamp(2.2rem,5vw,3.8rem); font-weight: 900; color: var(--white); margin-bottom: 1rem; }
+    .cta-content p { font-size: 1.2rem; color: rgba(255,255,255,0.65); max-width: 540px; margin: 0 auto 2.5rem; line-height: 1.7; }
+    .footer { background: var(--black); border-top: 1px solid rgba(255,255,255,0.06); padding: 2.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .footer img { height: 32px; width: auto; opacity: 0.8; }
+    .footer-copy { font-size: 0.875rem; color: rgba(255,255,255,0.4); font-weight: 500; }
+
+    @media (max-width: 900px) {
+      .module-hero-inner, .calendar-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+      .entity-grid, .deductions-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .entity-grid, .deductions-grid { grid-template-columns: 1fr; }
+      .footer { flex-direction: column; align-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <a href="index.html">
+        <img src="Final Assets/optimized/logo-horizontal.png" alt="Lumpy" width="194" height="40" />
+      </a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-dropdown-btn" aria-expanded="false">
+          Modules
+          <svg width="10" height="7" viewBox="0 0 10 7" fill="none" aria-hidden="true"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <ul class="nav-dropdown-menu">
+          <li><a href="income-smoothing.html"><span class="dm-num">1</span>Income Smoothing</a></li>
+          <li><a href="smart-spending.html"><span class="dm-num">2</span>Smart Spending</a></li>
+          <li><a href="five-year-stability.html"><span class="dm-num">3</span>5-Year Stability</a></li>
+          <li><a href="credit-readiness.html"><span class="dm-num">4</span>Credit Readiness</a></li>
+          <li><a href="tax-management.html"><span class="dm-num">5</span>Tax Management</a></li>
+        </ul>
+      </li>
+      <li><a href="events.html">Events</a></li>
+      <li><a href="#" data-open-modal class="nav-cta">Get Started</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="module-hero">
+    <div class="module-hero-mesh"></div>
+    <div class="container">
+      <div class="module-hero-inner">
+        <div class="module-hero-text">
+          <div class="module-badge reveal">
+            <span class="module-num">5</span>
+            Module 5 of 5
+          </div>
+          <h1 class="reveal stagger-1">Stop spending money<br />that belongs to <em>SARS.</em></h1>
+          <p class="reveal stagger-2">You do not need to be a tax expert. You just need to understand your obligations and have a system that handles them automatically — before tax shock wipes out months of careful income smoothing.</p>
+          <div class="module-hero-ctas reveal stagger-3">
+            <a href="#" data-open-modal class="btn btn--primary btn--lg">Join the Waitlist</a>
+            <a href="#deductions" class="btn btn--outline">See Your Deductions</a>
+          </div>
+        </div>
+        <div class="tax-shock-card reveal-right">
+          <div class="tax-shock-eyebrow">The Lumpy tax reality</div>
+          <div class="tax-shock-scenario">
+            <div class="ts-row">
+              <span class="ts-label">Invoice received</span>
+              <span class="ts-val">R50,000</span>
+            </div>
+            <div class="ts-row">
+              <span class="ts-label">Approximate SARS portion</span>
+              <span class="ts-val ts-val--danger">−R5,000 to R17,500</span>
+            </div>
+            <div class="ts-row">
+              <span class="ts-label">Money that is actually yours</span>
+              <span class="ts-val ts-val--safe">R32,500 – R45,000</span>
+            </div>
+          </div>
+          <div class="tax-shock-note">
+            <strong>Tax shock</strong> happens when you spend the SARS portion, then a provisional tax deadline arrives. The Tax Management System moves it into The Vault the same day it arrives — making tax shock permanently impossible.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENTITY TYPES -->
+  <section class="entity-section">
+    <div class="container">
+      <div class="entity-header">
+        <span class="label reveal">Step 1 — Your tax profile</span>
+        <h2 class="reveal stagger-1">Which entity type are you?</h2>
+        <p class="reveal stagger-2">This is one of the most important decisions for a Lumpy. Your entity type determines your tax rate, your submission requirements, and your obligations to SARS.</p>
+      </div>
+      <div class="entity-grid">
+        <div class="entity-card reveal stagger-1">
+          <span class="entity-tag">Most common</span>
+          <h3>Sole Proprietor / Freelancer</h3>
+          <p>You trade under your own name. All income is personal income taxed at personal income tax rates. Submit an ITR12 annually and pay provisional tax via IRP6 twice a year.</p>
+          <div class="entity-rate">18% – 45%</div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">depending on taxable income band</p>
+        </div>
+        <div class="entity-card reveal stagger-2">
+          <span class="entity-tag">Simplified option</span>
+          <h3>Turnover Tax (under R2.3m)</h3>
+          <p>A simplified regime for businesses with annual turnover under R2,300,000. One tax replaces income tax, provisional tax, and VAT. Significantly less administration.</p>
+          <div class="entity-rate">0% – 3%</div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">of turnover — not taxable income</p>
+        </div>
+        <div class="entity-card reveal stagger-3">
+          <span class="entity-tag">Company structure</span>
+          <h3>Company (Pty) Ltd</h3>
+          <p>Your company pays Corporate Income Tax at a flat rate. You draw a salary (subject to PAYE) or dividends. Requires separate company tax returns and more complex administration.</p>
+          <div class="entity-rate">27%</div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">flat Corporate Income Tax rate</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEDUCTIONS -->
+  <section class="deductions-section" id="deductions">
+    <div class="container">
+      <div class="deductions-header">
+        <span class="label label--light reveal">Step 2 — Your deductions</span>
+        <h2 class="reveal stagger-1">Claim every rand SARS allows you to subtract.</h2>
+        <p class="reveal stagger-2">Most Lumpies pay more tax than they need to simply because they don't track or claim their deductions properly. The general rule: an expense is deductible if it was incurred wholly and exclusively in the production of your income.</p>
+      </div>
+      <div class="deductions-grid">
+        <div class="deduction-card reveal stagger-1">
+          <div class="deduction-icon">🏠</div>
+          <h4>Home Office</h4>
+          <p>Proportional to office floor area: rent/bond interest, rates, electricity, insurance. The room must be used exclusively and regularly for trade purposes.</p>
+        </div>
+        <div class="deduction-card reveal stagger-2">
+          <div class="deduction-icon">🚗</div>
+          <h4>Business Travel</h4>
+          <p>Fuel, parking, tolls for client visits and work travel. Requires a SARS-compliant logbook: date, destination, odometer readings, and purpose for every trip.</p>
+        </div>
+        <div class="deduction-card reveal stagger-3">
+          <div class="deduction-icon">💻</div>
+          <h4>Equipment & Technology</h4>
+          <p>Laptop, phone (business portion), software subscriptions, and any technology used for work. Keep invoices showing your name or business name.</p>
+        </div>
+        <div class="deduction-card reveal stagger-1">
+          <div class="deduction-icon">📋</div>
+          <h4>Professional Fees</h4>
+          <p>Accounting, bookkeeping, legal advice, and tax practitioner fees. Keep tax invoices from each service provider.</p>
+        </div>
+        <div class="deduction-card reveal stagger-2">
+          <div class="deduction-icon">🎓</div>
+          <h4>Training & Development</h4>
+          <p>Courses, books, workshops directly related to your work and income-generating activities. Keep proof of payment and description of each course.</p>
+        </div>
+        <div class="deduction-card reveal stagger-3">
+          <div class="deduction-icon">🏛️</div>
+          <h4>Retirement Annuity</h4>
+          <p>Contributions to an RA fund — up to 27.5% of income, max R430,000/year. Your RA certificate from your provider (RA5 or similar) is the required record.</p>
+        </div>
+      </div>
+      <div class="deductions-rule reveal">
+        <p>Keep receipts, bank statements, and records for at least <strong>five years</strong> — SARS can audit you for this period. The module calculates your home office deduction and vehicle logbook claim automatically based on your inputs.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SARS CALENDAR -->
+  <section class="calendar-section">
+    <div class="container">
+      <div class="calendar-inner">
+        <div class="calendar-copy reveal-left">
+          <span class="label label--light">Step 4 — Your SARS calendar</span>
+          <h2>Every deadline. Personalised to your situation.</h2>
+          <p>Most Lumpies don't know the provisional tax schedule. Sole proprietors must submit an IRP6 twice a year — 31 August and 28 February — and missing a deadline triggers interest and penalties.</p>
+          <p>The module also calculates your <strong>daily provision rate</strong>: the exact amount to transfer to The Vault every day, so provisional tax day is never a surprise.</p>
+        </div>
+        <div class="calendar-visual reveal-right">
+          <div class="cal-title">Key SARS dates for sole proprietors</div>
+          <div class="cal-events">
+            <div class="cal-event">
+              <div class="cal-event-dot dot--critical"></div>
+              <div>
+                <div class="cal-date">28 Feb</div>
+                <div class="cal-event-body">
+                  <h5>2nd Provisional Tax Payment (IRP6)</h5>
+                  <p>Based on actual income for the full tax year (1 March – 28 Feb). Your largest payment.</p>
+                </div>
+              </div>
+            </div>
+            <div class="cal-event">
+              <div class="cal-event-dot dot--important"></div>
+              <div>
+                <div class="cal-date">31 Aug</div>
+                <div class="cal-event-body">
+                  <h5>1st Provisional Tax Payment (IRP6)</h5>
+                  <p>Based on estimated income for the current tax year. At least 50% of estimated total liability.</p>
+                </div>
+              </div>
+            </div>
+            <div class="cal-event">
+              <div class="cal-event-dot dot--regular"></div>
+              <div>
+                <div class="cal-date">Jan – Mar</div>
+                <div class="cal-event-body">
+                  <h5>ITR12 Filing Season Opens</h5>
+                  <p>Your annual income tax return. File on time to avoid administrative penalties.</p>
+                </div>
+              </div>
+            </div>
+            <div class="cal-event">
+              <div class="cal-event-dot dot--regular"></div>
+              <div>
+                <div class="cal-date">Ongoing</div>
+                <div class="cal-event-body">
+                  <h5>Daily Vault Provision</h5>
+                  <p>Transfer your daily provision rate to The Vault every time income arrives — not at year end.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container cta-content">
+      <span class="label label--light reveal">Never miss a deadline again</span>
+      <h2 class="reveal stagger-1">Tax management that works automatically.</h2>
+      <p class="reveal stagger-2">Join the Lumpy waitlist and be first to access the Tax Management System — and the full five-module suite — when we launch.</p>
+      <a href="#" data-open-modal class="btn btn--primary btn--lg reveal stagger-3">Join the Waitlist</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <img src="Final Assets/optimized/logo-white.png" alt="Lumpy" loading="lazy" width="155" height="32" />
+    <p class="footer-copy">© 2024 Lumpy. Built for irregular income.</p>
+  </footer>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="signup-modal" role="dialog" aria-modal="true" aria-label="Join Lumpy">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <span class="label">Step 1 of 2</span>
+      <h2>Let's get started</h2>
+      <p class="modal-sub">Tell us a little about yourself.</p>
+      <form id="modal-form" novalidate>
+        <div class="m-field"><label for="m-name">Full name</label><input type="text" id="m-name" placeholder="Your full name" required autocomplete="name" /><span class="m-field-error" id="m-name-err"></span></div>
+        <div class="m-field"><label for="m-email">Email address</label><input type="email" id="m-email" placeholder="you@example.com" required autocomplete="email" /><span class="m-field-error" id="m-email-err"></span></div>
+        <div class="m-field"><label for="m-phone">Phone <span class="m-optional">(optional)</span></label><input type="tel" id="m-phone" placeholder="+27 000 000 0000" autocomplete="tel" /></div>
+        <div class="m-field"><label for="m-referral">How did you hear about Lumpy?</label><div class="m-select-wrap"><select id="m-referral" required><option value="" disabled selected>Select one…</option><option value="social_media">Social media</option><option value="friend_referral">Friend / referral</option><option value="google">Google</option><option value="other">Other</option></select></div><span class="m-field-error" id="m-referral-err"></span></div>
+        <p class="m-form-error" id="m-form-err"></p>
+        <button type="submit" class="m-submit" id="m-submit">Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('active'); observer.unobserve(entry.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    navToggle.addEventListener('click', () => { const isOpen = navLinks.classList.toggle('open'); navToggle.setAttribute('aria-expanded', isOpen); document.body.style.overflow = isOpen ? 'hidden' : ''; });
+    navLinks.querySelectorAll('a').forEach(link => { link.addEventListener('click', () => { navLinks.classList.remove('open'); navToggle.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; }); });
+    const nav = document.querySelector('.nav');
+    window.addEventListener('scroll', () => { nav.classList.toggle('nav--scrolled', window.scrollY > 50); }, { passive: true });
+    const ddBtn = document.querySelector('.nav-dropdown-btn');
+    const ddItem = document.querySelector('.nav-dropdown');
+    if (ddBtn && ddItem) {
+      ddBtn.addEventListener('click', e => { e.stopPropagation(); const o = ddItem.classList.toggle('open'); ddBtn.setAttribute('aria-expanded', o); });
+      document.addEventListener('click', e => { if (!ddItem.contains(e.target)) { ddItem.classList.remove('open'); ddBtn.setAttribute('aria-expanded', 'false'); } });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalOverlay = document.getElementById('signup-modal');
+      window.openModal = function() { modalOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; setTimeout(() => document.getElementById('m-name').focus(), 300); };
+      window.closeModal = function() { modalOverlay.classList.remove('open'); document.body.style.overflow = ''; };
+      document.querySelectorAll('[data-open-modal]').forEach(el => { el.addEventListener('click', (e) => { e.preventDefault(); openModal(); }); });
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal(); });
+    });
+  </script>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
+    const SUPABASE_URL = 'https://rwvzstjsluchajwacwgz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dnpzdGpzbHVjaGFqd2Fjd2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjI2OTcsImV4cCI6MjA5MTI5ODY5N30.IqR8KwUYTfenqaopg30UmRHRbFO5oZI9TmotAGi3xqw';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form = document.getElementById('modal-form');
+    const submitBtn = document.getElementById('m-submit');
+    function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+    function validate(id, errId, check, msg) { const el = document.getElementById(id), er = document.getElementById(errId); if (!check(el.value.trim())) { el.classList.add('invalid'); er.textContent = msg; return false; } el.classList.remove('invalid'); er.textContent = ''; return true; }
+    document.getElementById('m-name').addEventListener('blur', () => validate('m-name','m-name-err',v=>v.length>=2,'Please enter your full name.'));
+    document.getElementById('m-email').addEventListener('blur', () => validate('m-email','m-email-err',isValidEmail,'Please enter a valid email address.'));
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ok1 = validate('m-name','m-name-err',v=>v.length>=2,'Please enter your full name.');
+      const ok2 = validate('m-email','m-email-err',isValidEmail,'Please enter a valid email address.');
+      const ok3 = validate('m-referral','m-referral-err',v=>v!=='','Please select an option.');
+      if (!ok1||!ok2||!ok3) return;
+      const name = document.getElementById('m-name').value.trim();
+      const email = document.getElementById('m-email').value.trim().toLowerCase();
+      const phone = document.getElementById('m-phone').value.trim() || null;
+      const referral = document.getElementById('m-referral').value;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Saving… <span class="m-spinner"></span>';
+      const { error } = await supabase.from('signups').insert({ name, email, phone, referral_source: referral });
+      if (error) console.error('Supabase:', error.code, error.message);
+      window.location.href = 'qualify.html?email=' + encodeURIComponent(email);
+    });
+  </script>
+</body>
+</html>
