@@ -586,6 +586,10 @@ a { color: inherit; }
   gap: 1.5rem;
 }
 
+.cards--five {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 .card {
   background: rgba(250, 247, 239, 0.6);
   backdrop-filter: blur(8px);
@@ -2028,6 +2032,15 @@ a { color: inherit; }
     font-size: 1rem;
     padding: 15px 28px;
   }
+
+  /* Sections with own padding (not using .section class) */
+  .reframe { padding: 56px 0; }
+  .how { padding: 56px 0; }
+  .final-cta { padding: 56px 0; }
+
+  /* Card padding reduction */
+  .pain-visual { padding: 1.5rem; }
+  .imagine-visual { padding: 1.75rem; }
 
   /* Footer */
   .footer {
