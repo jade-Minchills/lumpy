@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lumpy - Smart Spending Framework</title>
+<style>
+  html,body{margin:0;padding:0;background:#FAF8F4;}
+  body{padding:2px;}
+</style>
+</head>
+<body>
+
+<script>
+/* window.storage shim - lets tools written for the Claude artifact storage API
+   run on a plain static host by backing them with localStorage. No-op if a real
+   window.storage already exists. */
+window.storage = window.storage || {
+  get:function(k){try{var v=localStorage.getItem(k);return Promise.resolve(v==null?null:{key:k,value:v})}catch(e){return Promise.resolve(null)}},
+  set:function(k,v){try{localStorage.setItem(k,v);return Promise.resolve({key:k,value:v})}catch(e){return Promise.resolve(null)}},
+  delete:function(k){try{localStorage.removeItem(k);return Promise.resolve({key:k,deleted:true})}catch(e){return Promise.resolve(null)}},
+  list:function(pfx){try{var ks=[];for(var i=0;i<localStorage.length;i++){var kk=localStorage.key(i);if(!pfx||kk.indexOf(pfx)===0)ks.push(kk)}return Promise.resolve({keys:ks})}catch(e){return Promise.resolve({keys:[]})}}
+};
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --lc:#1A2744;--lo:#FF6B47;--lol:#FFF0EC;--lom:#FFCBBE;
+  --lcr:#FAF8F4;--ls:#F0EBE0;--lm:#6B7590;
+  --lg:#2D9E6B;--lgl:#E8F7F0;--la:#F5A623;--lal:#FEF6E4;
+  --lb:rgba(26,39,68,0.1);--lw:#FFFFFF;
+  --t1r:#C0392B;--t1bg:#FCE8E4;--t1bd:#F5B7B1;
+  --t2r:#A06000;--t2bg:#FEF6DC;--t2bd:#F9D87A;
+  --t3r:#1A5080;--t3bg:#E5F0FC;--t3bd:#8BBFEC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+.lw{font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lcr);border-radius:20px;overflow:hidden}
+.lw-hd{background:var(--lc);padding:22px 28px 18px;display:flex;align-items:center;gap:12px}
+.lw-logo{font-family:'DM Serif Display',serif;font-size:24px;color:#fff}
+.lw-logo em{color:var(--lo);font-style:normal}
+.lw-hdtxt{font-size:13px;color:rgba(255,255,255,0.5);margin-left:4px}
+.lw-bdg{background:var(--lo);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.5px;margin-left:auto}
+.lw-steps{display:flex;background:var(--ls);border-bottom:1px solid var(--lb)}
+.lw-st{flex:1;padding:11px 5px;text-align:center;font-size:10px;font-weight:500;color:var(--lm);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.lw-st.active{color:var(--lo);border-bottom-color:var(--lo);background:rgba(255,107,71,.06)}
+.lw-st.done{color:var(--lg)}
+.lw-st .sn{display:block;font-size:14px;font-weight:600;margin-bottom:2px}
+.lw-bd{padding:22px 26px}
+.sc{display:none}.sc.active{display:block}
+.ew{font-size:11px;font-weight:600;color:var(--lo);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.h1{font-family:'DM Serif Display',serif;font-size:24px;color:var(--lc);line-height:1.25;margin-bottom:8px}
+.h1 em{color:var(--lo);font-style:italic}
+.sub{font-size:13px;color:var(--lm);line-height:1.6;margin-bottom:20px}
+.lw-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.lw-f{display:flex;flex-direction:column;gap:5px}
+.lw-f label{font-size:11px;font-weight:600;color:var(--lm);letter-spacing:.3px}
+.lw-f input,.lw-f select{border:1.5px solid var(--lb);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lw);outline:none;transition:border-color .2s}
+.lw-f input:focus,.lw-f select:focus{border-color:var(--lo)}
+.exp-row{display:grid;grid-template-columns:1fr 80px auto 90px auto;gap:6px;align-items:center;margin-bottom:6px}
+.exp-row input,.exp-row select{border:1.5px solid var(--lb);border-radius:9px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lw);outline:none}
+.exp-row input:focus,.exp-row select:focus{border-color:var(--lo)}
+.tier-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.tp1{background:var(--t1bg);color:var(--t1r)}
+.tp2{background:var(--t2bg);color:var(--t2r)}
+.tp3{background:var(--t3bg);color:var(--t3r)}
+.del{background:none;border:none;cursor:pointer;color:#ccc;font-size:17px;padding:3px;transition:color .2s}
+.del:hover{color:var(--lo)}
+.add-b{background:none;border:1.5px dashed var(--lom);border-radius:10px;color:var(--lo);font-size:13px;font-weight:600;padding:9px;width:100%;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;margin-top:3px}
+.add-b:hover{background:var(--lol)}
+.lw-btn{background:var(--lo);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;width:100%;margin-top:16px}
+.lw-btn:hover{background:#e85a38;transform:translateY(-1px)}
+.lw-bts{background:none;color:var(--lm);border:1.5px solid var(--lb);border-radius:12px;padding:12px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px;width:100%}
+.lw-bts:hover{border-color:var(--lc);color:var(--lc)}
+.tip{background:var(--lol);border:1px solid var(--lom);border-left:4px solid var(--lo);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#7A3220;line-height:1.5}
+.tip strong{color:var(--lo)}
+.gtip{background:var(--lgl);border:1px solid #90d4b0;border-left:4px solid var(--lg);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#1d5e3a;line-height:1.5}
+.gtip strong{color:var(--lg)}
+.tier-section{border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.ts1{background:var(--t1bg);border:1.5px solid var(--t1bd)}
+.ts2{background:var(--t2bg);border:1.5px solid var(--t2bd)}
+.ts3{background:var(--t3bg);border:1.5px solid var(--t3bd)}
+.ts-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ts-title{font-size:14px;font-weight:600}
+.ts1 .ts-title{color:var(--t1r)}.ts2 .ts-title{color:var(--t2r)}.ts3 .ts-title{color:var(--t3r)}
+.ts-total{font-size:16px;font-weight:600}
+.ts1 .ts-total{color:var(--t1r)}.ts2 .ts-total{color:var(--t2r)}.ts3 .ts-total{color:var(--t3r)}
+.ts-item{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06)}
+.ts-item:last-child{border-bottom:none}
+.ts-item-name{color:var(--lc)}
+.ts-item-amt{font-weight:600}
+.ts1 .ts-item-amt{color:var(--t1r)}.ts2 .ts-item-amt{color:var(--t2r)}.ts3 .ts-item-amt{color:var(--t3r)}
+.month-sim{background:var(--lw);border:1.5px solid var(--lb);border-radius:14px;padding:16px 20px;margin-bottom:14px}
+.sim-label{font-size:11px;font-weight:600;color:var(--lm);letter-spacing:.3px;margin-bottom:8px;text-transform:uppercase}
+.income-slider-row{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.income-slider-row label{font-size:12px;color:var(--lm);white-space:nowrap}
+.income-slider-row input[type=range]{flex:1}
+.income-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--lc);min-width:90px;text-align:right}
+.signal-banner{border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.signal-banner.green{background:var(--lgl);border:1.5px solid #90d4b0}
+.signal-banner.amber{background:var(--lal);border:1.5px solid #f0c060}
+.signal-banner.red{background:#FDECEA;border:1.5px solid #F5A8A0}
+.sb-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.signal-banner.green .sb-icon{background:#b4e4cd}
+.signal-banner.amber .sb-icon{background:#fde3a0}
+.signal-banner.red .sb-icon{background:#f8c0bc}
+.sb-title{font-size:13px;font-weight:600}
+.signal-banner.green .sb-title{color:#1a6030}
+.signal-banner.amber .sb-title{color:#8a6000}
+.signal-banner.red .sb-title{color:#a02010}
+.sb-desc{font-size:12px;margin-top:2px}
+.signal-banner.green .sb-desc{color:#2a8050}
+.signal-banner.amber .sb-desc{color:#a07000}
+.signal-banner.red .sb-desc{color:#c03020}
+.spend-bars{margin:14px 0}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-label{font-size:11px;color:var(--lm);width:80px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;background:#e8e4dc;border-radius:6px;height:10px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width .4s}
+.bar-val{font-size:11px;font-weight:600;width:50px;color:var(--lc)}
+.action-list{margin-top:12px}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--lb)}
+.action-item:last-child{border-bottom:none}
+.action-num{width:22px;height:22px;border-radius:50%;background:var(--lo);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.action-txt{font-size:13px;color:var(--lc);line-height:1.5}
+.div{border:none;border-top:1px solid var(--lb);margin:18px 0}
+.ag2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ag3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:14px}
+.sm-stat{background:var(--lw);border:1.5px solid var(--lb);border-radius:12px;padding:12px 14px}
+.sm-stat .sv{font-size:20px;font-weight:600;line-height:1}
+.sm-stat .sl{font-size:11px;color:var(--lm);margin-top:3px}
+.sm-stat.t1 .sv{color:var(--t1r)}.sm-stat.t2 .sv{color:var(--t2r)}.sm-stat.t3 .sv{color:var(--t3r)}.sm-stat.sm .sv{color:var(--lc)}
+.lw-ft{background:var(--ls);border-top:1px solid var(--lb);padding:11px 26px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--lm)}
+</style>
+
+<div class="lw">
+  <div class="lw-hd">
+    <div class="lw-logo">Lumpy<em>.</em></div>
+    <div class="lw-hdtxt">Smart Spending Framework</div>
+    <div class="lw-bdg">💳 Module 2</div>
+  </div>
+  <div class="lw-steps" id="stepBar">
+    <div class="lw-st active" onclick="gS(1)"><span class="sn">1</span>Your Expenses</div>
+    <div class="lw-st" onclick="gS(2)"><span class="sn">2</span>Tier Review</div>
+    <div class="lw-st" onclick="gS(3)"><span class="sn">3</span>Month Simulator</div>
+    <div class="lw-st" onclick="gS(4)"><span class="sn">4</span>Your Rules</div>
+  </div>
+
+  <div class="lw-bd">
+
+    <div class="sc active" id="s1">
+      <div class="ew">Step 1 of 4</div>
+      <h2 class="h1">Your expenses, <em>sorted by tier</em></h2>
+      <p class="sub">Add every monthly expense and assign it to a tier. This is the foundation of your spending decisions in any month - good or lean.</p>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <span class="tier-pill tp1">Tier 1 - Must Pay</span>
+        <span class="tier-pill tp2">Tier 2 - Important</span>
+        <span class="tier-pill tp3">Tier 3 - Flexible</span>
+      </div>
+      <div id="expList"></div>
+      <button class="add-b" onclick="addExp()">+ Add an expense</button>
+      <div class="div"></div>
+      <div class="lw-row" style="margin-bottom:8px">
+        <div class="lw-f">
+          <label>Currency</label>
+          <select id="cur"><option value="R">R (South African Rand)</option><option value="$">$ (US Dollar)</option><option value="£">£ (British Pound)</option><option value="€">€ (Euro)</option></select>
+        </div>
+        <div class="lw-f">
+          <label>Smoothed monthly income (from Module 1)</label>
+          <input type="number" id="smoothed" placeholder="e.g. 28000" min="0" oninput="updFt()" />
+        </div>
+      </div>
+      <div class="tip"><strong>Lumpy tip:</strong> If you completed the Income Smoothing System (Module 1), enter your smoothed monthly income above. It becomes the reference point for all spending decisions in this module.</div>
+      <button class="lw-btn" onclick="gS(2)">Next: Review Your Tiers →</button>
+    </div>
+
+    <div class="sc" id="s2">
+      <div class="ew">Step 2 of 4</div>
+      <h2 class="h1">Your three-tier <em>spending picture</em></h2>
+      <p class="sub">Here is your full spending profile, sorted by tier. Check the amounts - and check whether each expense is in the right tier.</p>
+      <div id="tierSummary"></div>
+      <div class="div"></div>
+      <div class="ag3" id="tierStats"></div>
+      <div class="div"></div>
+      <div id="totalVsSmoothed"></div>
+      <button class="lw-btn" onclick="gS(3)">Next: Simulate Any Month →</button>
+      <button class="lw-bts" onclick="gS(1)">← Back</button>
+    </div>
+
+    <div class="sc" id="s3">
+      <div class="ew">Step 3 of 4</div>
+      <h2 class="h1">The <em>month simulator</em></h2>
+      <p class="sub">Drag the slider to any income level and see exactly what to spend, what to pause, and how confident you can be. This is your spending permission system.</p>
+      <div class="month-sim">
+        <div class="sim-label">This month's income</div>
+        <div class="income-slider-row">
+          <label>Low</label>
+          <input type="range" id="simSlider" min="0" max="100000" step="500" value="28000" oninput="updSim()" />
+          <label>High</label>
+          <div class="income-val" id="simVal">R 28,000</div>
+        </div>
+      </div>
+      <div id="signalBanner"></div>
+      <div class="spend-bars" id="spendBars"></div>
+      <div class="div"></div>
+      <div id="simDetail"></div>
+      <button class="lw-btn" onclick="gS(4)">Next: Your Spending Rules →</button>
+      <button class="lw-bts" onclick="gS(2)">← Back</button>
+    </div>
+
+    <div class="sc" id="s4">
+      <div class="ew">Step 4 of 4</div>
+      <h2 class="h1">Your <em>personal spending rules</em></h2>
+      <p class="sub">These are the rules that govern your spending - automatically, without guilt, in every type of month. Print them. Put them somewhere visible.</p>
+      <div id="rulesCard"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:4px">Lifestyle inflation defence</h3>
+      <p style="font-size:12px;color:var(--lm);margin-bottom:12px">Great months generate surplus. Here is the rule for where that surplus goes.</p>
+      <div id="surplusRule"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">Your 30-day action checklist</h3>
+      <div class="action-list" id="actionList"></div>
+      <div class="div"></div>
+      <div class="gtip"><strong>The Lumpy spending principle:</strong> Your three tiers are not a budget - they are a decision framework. When income is high, enjoy Tier 3. When income is modest, pause Tier 3 without guilt. Tier 1 is always paid. Tier 2 is always reviewed. That is the whole system.</div>
+      <button class="lw-btn" onclick="sendPrompt('I have completed the Lumpy Smart Spending Framework (Module 2). Can you help me start the 5-Year Stability Plan (Module 3) - specifically how to build my emergency fund target, choose a Retirement Annuity, and structure my long-term savings around my irregular income?')">Next Module: 5-Year Stability Plan ↗</button>
+      <button class="lw-bts" onclick="gS(3)">← Back to Simulator</button>
+    </div>
+
+  </div>
+
+  <div class="lw-ft">
+    <span>💳 Lumpy Smart Spending Framework - Module 2</span>
+    <span id="ftTxt" style="color:var(--lo);font-weight:600"></span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const expenses=[];
+function cur(){return document.getElementById('cur').value}
+function sm(){return parseFloat(document.getElementById('smoothed').value)||0}
+function R(n){return cur()+Math.round(n).toLocaleString()}
+
+function gS(n){
+  if(n===2)compTier();
+  if(n===3){compTier();initSim();}
+  if(n===4)compRules();
+  document.querySelectorAll('.sc').forEach((s,i)=>s.classList.toggle('active',i===n-1));
+  document.querySelectorAll('.lw-st').forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1)});
+}
+
+function addExp(n,a,t){
+  expenses.push({id:Date.now()+Math.random(),n:n||'',a:a||0,t:t||'1'});
+  renderExps();
+}
+
+function renderExps(){
+  const l=document.getElementById('expList');l.innerHTML='';
+  expenses.forEach(e=>{
+    const r=document.createElement('div');r.className='exp-row';
+    r.innerHTML=`<input type="text" placeholder="Expense name" value="${e.n}" onchange="upE('${e.id}','n',this.value)"><select onchange="upE('${e.id}','t',this.value)"><option value="1" ${e.t==='1'?'selected':''}>Tier 1</option><option value="2" ${e.t==='2'?'selected':''}>Tier 2</option><option value="3" ${e.t==='3'?'selected':''}>Tier 3</option></select><span class="tier-pill tp${e.t}">${e.t==='1'?'Must Pay':e.t==='2'?'Important':'Flexible'}</span><input type="number" placeholder="R/month" min="0" value="${e.a||''}" onchange="upE('${e.id}','a',parseFloat(this.value)||0)"><button class="del" onclick="dlE('${e.id}')">×</button>`;
+    l.appendChild(r);
+  });
+  updFt();
+}
+
+function upE(id,f,v){
+  const e=expenses.find(e=>e.id==id);
+  if(e){e[f]=v;}
+  if(f==='t'){renderExps();}
+}
+function dlE(id){const i=expenses.findIndex(e=>e.id==id);if(i>-1)expenses.splice(i,1);renderExps()}
+function updFt(){
+  const tot=expenses.reduce((a,e)=>a+(parseFloat(e.a)||0),0);
+  if(tot>0)document.getElementById('ftTxt').textContent=`Total expenses: ${R(tot)}`;
+}
+function totByTier(t){return expenses.filter(e=>e.t===t).reduce((a,e)=>a+(parseFloat(e.a)||0),0)}
+
+function compTier(){
+  const t1=totByTier('1'),t2=totByTier('2'),t3=totByTier('3');
+  const total=t1+t2+t3;
+  const smI=sm();
+  const tiers=[
+    {t:'1',label:'Tier 1 - Must Pay',cls:'ts1'},{t:'2',label:'Tier 2 - Important',cls:'ts2'},{t:'3',label:'Tier 3 - Flexible',cls:'ts3'},
+  ];
+  document.getElementById('tierSummary').innerHTML=tiers.map(({t,label,cls})=>{
+    const items=expenses.filter(e=>e.t===t);
+    const tot=items.reduce((a,e)=>a+(parseFloat(e.a)||0),0);
+    if(items.length===0) return `<div class="tier-section ${cls}"><div class="ts-head"><span class="ts-title">${label}</span><span class="ts-total">${R(0)}</span></div><p style="font-size:12px;color:var(--lm);font-style:italic">No expenses in this tier yet</p></div>`;
+    return `<div class="tier-section ${cls}"><div class="ts-head"><span class="ts-title">${label}</span><span class="ts-total">${R(tot)}/month</span></div>${items.map(e=>`<div class="ts-item"><span class="ts-item-name">${e.n||'Unnamed'}</span><span class="ts-item-amt">${R(parseFloat(e.a)||0)}</span></div>`).join('')}</div>`;
+  }).join('');
+  document.getElementById('tierStats').innerHTML=[
+    {cls:'t1',label:'Tier 1 (must pay)',val:R(t1)+'/mo'},
+    {cls:'t2',label:'Tier 2 (important)',val:R(t2)+'/mo'},
+    {cls:'t3',label:'Tier 3 (flexible)',val:R(t3)+'/mo'},
+  ].map(s=>`<div class="sm-stat ${s.cls}"><div class="sv">${s.val}</div><div class="sl">${s.label}</div></div>`).join('');
+  let tvHtml='';
+  if(smI>0){
+    const gap=smI-total;
+    const pct=Math.round((total/smI)*100);
+    if(gap>=0){
+      tvHtml=`<div class="gtip"><strong>Your expenses (${R(total)}/mo) are ${pct}% of your smoothed income (${R(smI)}/mo).</strong> You have ${R(gap)}/month of buffer within your smoothed income - this is your spending cushion and Shield contribution.</div>`;
+    } else {
+      tvHtml=`<div class="tip"><strong>Your expenses (${R(total)}/mo) exceed your smoothed income (${R(smI)}/mo) by ${R(Math.abs(gap))}.</strong> This gap means quiet months will require drawing from The Shield. Review your Tier 2 and Tier 3 items to find reductions.</div>`;
+    }
+  }
+  document.getElementById('totalVsSmoothed').innerHTML=tvHtml;
+}
+
+function initSim(){
+  const smI=sm();
+  const slider=document.getElementById('simSlider');
+  const maxVal=Math.max(smI*2,100000);
+  slider.max=Math.round(maxVal);
+  slider.value=smI>0?smI:28000;
+  updSim();
+}
+
+function updSim(){
+  const income=parseFloat(document.getElementById('simSlider').value)||0;
+  document.getElementById('simVal').textContent=R(income);
+  const t1=totByTier('1'),t2=totByTier('2'),t3=totByTier('3');
+  const smI=sm()||income;
+  let signal,icon,title,desc;
+  if(income>=smI*1.2){
+    signal='green';icon='★';title='Great month - enjoy Tier 3 fully';
+    desc=`Income of ${R(income)} is well above your smoothed level. Pay all tiers, contribute to The Shield, and enjoy discretionary spending without restriction.`;
+  } else if(income>=t1+t2+t3){
+    signal='green';icon='✓';title='Good month - all tiers active';
+    desc=`Income of ${R(income)} covers all your expenses. Pay Tier 1, Tier 2, and Tier 3 in full. Any surplus above ${R(t1+t2+t3)} goes to The Shield.`;
+  } else if(income>=t1+t2){
+    signal='amber';icon='~';title='Lean month - pause Tier 3';
+    desc=`Income of ${R(income)} covers Tier 1 and Tier 2 but not all of Tier 3. Pause Tier 3 (${R(t3)}/mo) this month. No guilt - this is the system working.`;
+  } else if(income>=t1){
+    signal='amber';icon='!';title='Tight month - Tier 2 reduced, Tier 3 paused';
+    desc=`Income of ${R(income)} covers Tier 1 in full. Cover what you can of Tier 2 (${R(t2)}/mo). Pause Tier 3 entirely. Draw from The Shield for any shortfall.`;
+  } else {
+    signal='red';icon='⚠';title='Crisis month - Tier 1 only, draw from Shield';
+    desc=`Income of ${R(income)} does not cover all Tier 1 expenses. Pay Tier 1 first. Draw from The Shield for any shortfall. Suspend Tier 2 and Tier 3 completely.`;
+  }
+  document.getElementById('signalBanner').innerHTML=`<div class="signal-banner ${signal}"><div class="sb-icon">${icon}</div><div><div class="sb-title">${title}</div><div class="sb-desc">${desc}</div></div></div>`;
+  const t1Pay=Math.min(income,t1);
+  const t2Pay=Math.min(Math.max(0,income-t1),t2);
+  const t3Pay=Math.min(Math.max(0,income-t1-t2),t3);
+  const shield=Math.max(0,income-t1-t2-t3);
+  const maxBar=Math.max(t1+t2+t3,income);
+  const bars=[
+    {label:'Tier 1',val:t1Pay,color:'#C0392B'},
+    {label:'Tier 2',val:t2Pay,color:'#A06000'},
+    {label:'Tier 3',val:t3Pay,color:'#1A5080'},
+    {label:'Shield',val:shield,color:'#2D9E6B'},
+  ];
+  document.getElementById('spendBars').innerHTML=`<div style="font-size:11px;color:var(--lm);margin-bottom:8px;font-weight:600;letter-spacing:.3px;text-transform:uppercase">How ${R(income)} flows this month</div>`+bars.map(b=>{
+    const pct=maxBar>0?Math.min(100,Math.round((b.val/maxBar)*100)):0;
+    return `<div class="bar-row"><div class="bar-label">${b.label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${b.color}"></div></div><div class="bar-val">${R(b.val)}</div></div>`;
+  }).join('');
+  document.getElementById('simDetail').innerHTML=`<div class="ag2">
+    <div class="sm-stat t1"><div class="sv">${R(t1Pay)}</div><div class="sl">Tier 1 paid</div></div>
+    <div class="sm-stat t2"><div class="sv">${R(t2Pay)}</div><div class="sl">Tier 2 paid</div></div>
+    <div class="sm-stat t3"><div class="sv">${R(t3Pay)}</div><div class="sl">Tier 3 paid</div></div>
+    <div class="sm-stat sm"><div class="sv" style="color:var(--lg)">${R(shield)}</div><div class="sl">To The Shield</div></div>
+  </div>`;
+}
+
+function compRules(){
+  const t1=totByTier('1'),t2=totByTier('2'),t3=totByTier('3');
+  const smI=sm();
+  document.getElementById('rulesCard').innerHTML=`
+    <div style="background:var(--lc);border-radius:14px;padding:18px 22px;color:#fff;margin-bottom:0">
+      <div style="font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:12px">My Smart Spending Rules</div>
+      ${[
+        {test:`Income ≥ ${R(t1+t2+t3)}/month`,action:`Pay all three tiers in full. Surplus above ${R(t1+t2+t3)} goes to The Shield.`,col:'#4fd1a0'},
+        {test:`Income ${R(t1+t2)}-${R(t1+t2+t3)}/month`,action:`Pay Tier 1 (${R(t1)}) and Tier 2 (${R(t2)}) in full. Pause Tier 3 (${R(t3)}) this month.`,col:'#f0b429'},
+        {test:`Income ${R(t1)}-${R(t1+t2)}/month`,action:`Pay Tier 1 (${R(t1)}) in full. Cover Tier 2 proportionally. Pause Tier 3 entirely. Draw The Shield for shortfall.`,col:'#f0862e'},
+        {test:`Income below ${R(t1)}/month`,action:`Pay Tier 1 only. Draw The Shield for any shortfall. Suspend Tier 2 and Tier 3 completely.`,col:'#e05040'},
+      ].map(r=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+        <div style="width:10px;height:10px;border-radius:50%;background:${r.col};flex-shrink:0;margin-top:4px"></div>
+        <div><div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:2px">${r.test}</div><div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5">${r.action}</div></div>
+      </div>`).join('')}
+    </div>`;
+  document.getElementById('surplusRule').innerHTML=`<div class="gtip" style="margin-bottom:0"><strong>In any month where income exceeds your smoothed level:</strong> The surplus above your smoothed income (${smI>0?R(smI):'your smoothed income'}) flows entirely to The Shield - not to lifestyle spending. Your smoothed monthly income is the ceiling for your personal spending account, not the floor. This single rule prevents lifestyle inflation permanently.</div>`;
+  const checks=[
+    `Write your three tier totals on a card: Tier 1 = ${R(t1)}, Tier 2 = ${R(t2)}, Tier 3 = ${R(t3)}`,
+    'Put your four spending rules somewhere visible - phone screensaver, fridge, or wallet',
+    'Set a monthly calendar reminder on the 25th to assess next month\'s likely income and decide on Tier 3',
+    'Review each Tier 3 item - are any subscriptions or services you rarely use worth cancelling permanently?',
+    smI>0?`Confirm your smoothed income (${R(smI)}/month) matches what flows into The Flow (Account 2) each month`:'Set up your smoothed monthly transfer to The Flow (Account 2) from the Income Smoothing System (Module 1)',
+    'Review your Tier 2 items - could any become Tier 1 (essential) or Tier 3 (genuinely flexible)?',
+    'Identify your highest single Tier 3 expense - if a crisis month arrived tomorrow, could you suspend it immediately?',
+    'After 3 months of using the framework, recalibrate your tiers based on what actually happened',
+  ];
+  document.getElementById('actionList').innerHTML=checks.map((c,i)=>`<div class="action-item"><div class="action-num">${i+1}</div><div class="action-txt">${c}</div></div>`).join('');
+}
+
+function initDefaults(){
+  [
+    ['Rent / bond',14000,'1'],['Medical aid',4500,'1'],['Loan repayments',3500,'1'],
+    ['Vehicle finance',4000,'1'],['Data & phone',1200,'1'],['Insurance',1800,'1'],
+    ['Food & groceries',5000,'2'],['Domestic help',2000,'2'],['Gym membership',800,'2'],
+    ['Streaming services',400,'3'],['Dining out',2000,'3'],['Clothing',1500,'3'],
+  ].forEach(d=>addExp(d[0],parseFloat(d[1]),d[2]));
+}
+
+initDefaults();
+</script>
+
+<script>
+/* Lumpy shell bridge - does NOT touch any tool calculation. */
+(function(){
+  var M=2, MAXSTEP=4;
+  var PKEY='lumpy_profile_v1', GKEY='lumpy_progress_v1', TKEY='lumpy_tool_'+M+'_v1', PLKEY='lumpy_profile';
+  function rp(){try{return JSON.parse(localStorage.getItem(PKEY))||{}}catch(e){return{}}}
+  function wp(p){try{localStorage.setItem(PKEY,JSON.stringify(p))}catch(e){}}
+  function rpl(){try{return JSON.parse(localStorage.getItem(PLKEY))||{}}catch(e){return{}}}
+  function savedStr(){try{var d=new Date();return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}catch(e){return 'just now'}}
+  function post(type,extra){try{if(window.parent&&window.parent!==window){var m={lumpy:type,module:M};if(extra)for(var k in extra)m[k]=extra[k];window.parent.postMessage(m,'*')}}catch(e){}}
+  function patch(o){var p=rp(),ch=false;for(var k in o){var val=o[k];if(val===null||val===undefined||val==='')continue;if(typeof val==='number'&&(isNaN(val)||!isFinite(val)))continue;if(p[k]!==val){p[k]=val;ch=true}}if(ch){wp(p);post('profile',{profile:p})}}
+  /* lumpy_profile: the 9-field foundation object that Module 6 (Annual Planner) reads. */
+  function patchPl(o){var p=rpl(),ch=false;for(var k in o){var val=o[k];if(val===null||val===undefined||val==='')continue;if(typeof val==='number'&&(isNaN(val)||!isFinite(val)))continue;if(p[k]!==val){p[k]=val;ch=true}}if(ch){p.savedAt=savedStr();try{localStorage.setItem(PLKEY,JSON.stringify(p))}catch(e){}post('profile',{})}}
+  function setV(id,val){var el=document.getElementById(id);if(!el||val===null||val===undefined||val==='')return;el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
+  function num(id){var el=document.getElementById(id);if(!el)return null;var n=parseFloat(el.value);return isNaN(n)?null:n;}
+
+  /* Dynamically-added rows (expenses / deductions) - saved and replayed via each tool's own add fn. */
+  var ROWS={1:{c:'#expList',add:'addE',sel:'.er'},2:{c:'#expList',add:'addExp',sel:'.exp-row'},5:{c:'#dedList',add:'addDed',sel:'.deduct-row'}};
+  function readRows(){var cfg=ROWS[M];if(!cfg)return null;var box=document.querySelector(cfg.c);if(!box)return null;var out=[];box.querySelectorAll(cfg.sel).forEach(function(r){var t=r.querySelector('input[type=text]'),s=r.querySelector('select'),a=r.querySelector('input[type=number]');out.push([t?t.value:'',a?(parseFloat(a.value)||0):0,s?s.value:'']);});return out;}
+  function restoreRows(){var cfg=ROWS[M];if(!cfg)return;var raw=null;try{raw=localStorage.getItem(TKEY+'_rows')}catch(e){return}if(raw===null)return;var rows;try{rows=JSON.parse(raw)}catch(e){return}if(!Array.isArray(rows))return;var box=document.querySelector(cfg.c),addFn=window[cfg.add];if(!box||typeof addFn!=='function')return;var g=0;while(box.querySelector('.del')&&g++<200){box.querySelector('.del').click();}rows.forEach(function(r){try{addFn(r[0],r[1],r[2])}catch(e){}});}
+
+  /* Module 6 income forecast persistence (the 12 forecast cells have no ids). */
+  function readForecast(){var g=document.getElementById('incomeGrid');if(!g)return null;return [].map.call(g.querySelectorAll('input[type=number]'),function(i){return i.value});}
+  function applyForecast(){var raw=null;try{raw=localStorage.getItem(TKEY+'_forecast')}catch(e){return}if(!raw)return;var arr;try{arr=JSON.parse(raw)}catch(e){return}if(!Array.isArray(arr))return;var g=document.getElementById('incomeGrid');if(!g)return;var ins=g.querySelectorAll('input[type=number]');arr.forEach(function(val,i){if(ins[i]&&val!==''&&val!=null){ins[i].value=val;ins[i].dispatchEvent(new Event('input',{bubbles:true}));}});}
+  if(M===6&&typeof buildIncomeGrid==='function'){var _big=buildIncomeGrid;window.buildIncomeGrid=function(){var r=_big.apply(this,arguments);applyForecast();return r;};}
+
+  /* The tools' "Next module" buttons call sendPrompt(); repurpose it to advance within the shell. */
+  window.sendPrompt=function(){post('next');};
+
+  /* 1) Restore this tool's own previously entered fields (Module 6 foundations are owned by loadProfile). */
+  var SKIP6=(M===6)?{smoothedIncome:1,shieldTopup:1,t1:1,t2:1,t3:1,raMonthly:1,tfsaMonthly:1,effTaxRate:1,raAnnual:1}:null;
+  try{var s=JSON.parse(localStorage.getItem(TKEY))||{};Object.keys(s).forEach(function(id){if(SKIP6&&SKIP6[id])return;var el=document.getElementById(id);if(el&&document.activeElement!==el){el.value=s[id];el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}});}catch(e){}
+  restoreRows();
+
+  /* 2) Prefill shared values from earlier modules (these win over stale local copies). */
+  var p=rp();
+  if(M===2){setV('smoothed',p.income);setV('cur',p.currency);}
+  if(M===3){setV('income',p.income);setV('t1exp',p.tier1);}
+  if(M===4){setV('income',p.income);setV('shieldBal',p.shield);setV('raValue',p.raValue);}
+  if(M===5){setV('grossIncome',p.grossAnnual);}
+  /* Module 6 prefills itself via its own loadProfile() reading 'lumpy_profile'. */
+
+  /* 3) Harvest: persist fields and push shared outputs to both the shell profile and the planner profile. */
+  function tier1FromDOM(){var t=0;document.querySelectorAll('#expList .er').forEach(function(r){var sel=r.querySelector('select'),amt=r.querySelector('input[type=number]');if(sel&&amt&&sel.value==='1')t+=parseFloat(amt.value)||0;});return t;}
+  function snap(){
+    try{var map={};document.querySelectorAll('input[id],select[id]').forEach(function(el){if(el.id&&el.type!=='button')map[el.id]=el.value;});localStorage.setItem(TKEY,JSON.stringify(map));}catch(e){}
+    try{var rr=readRows();if(rr)localStorage.setItem(TKEY+'_rows',JSON.stringify(rr));}catch(e){}
+    try{if(M===6){var fc=readForecast();if(fc)localStorage.setItem(TKEY+'_forecast',JSON.stringify(fc));}}catch(e){}
+    try{
+      if(M===1){
+        var o={};if(typeof getSm==='function'){var sm=getSm();if(sm>0)o.income=Math.round(sm);}if(typeof tax==='function'){o.taxRate=tax();}if(typeof cur==='function'){o.currency=cur();}var t1=tier1FromDOM();if(t1>0)o.tier1=Math.round(t1);var ga=0;for(var i=0;i<12;i++){var mi=document.getElementById('m'+i);if(mi)ga+=parseFloat(mi.value)||0;}if(ga>0)o.grossAnnual=Math.round(ga);patch(o);
+        var pl={};var smx=(typeof getSm==='function')?getSm():0;if(smx>0)pl.smoothedIncome=Math.round(smx);if(typeof tax==='function')pl.effTaxRate=Math.round(tax());
+        try{var rt=(typeof tax==='function')?tax()/100:0;var tA=smx*rt;var tE=0;document.querySelectorAll('#expList .er input[type=number]').forEach(function(x){tE+=parseFloat(x.value)||0;});var lA=Math.min(tE,smx-tA);var bA=Math.max(0,smx-tA-lA);if(smx>0)pl.shieldTopup=Math.round(bA);}catch(e){}
+        patchPl(pl);
+      }
+      if(M===2){var pl2={};if(typeof totByTier==='function'){pl2.t1=Math.round(totByTier('1'));pl2.t2=Math.round(totByTier('2'));pl2.t3=Math.round(totByTier('3'));}patchPl(pl2);}
+      if(M===3){patch({shield:num('shieldBal'),raValue:num('raValue'),tier1:num('t1exp'),income:num('income')});patchPl({raMonthly:num('raMonthly'),tfsaMonthly:num('tfsaMonthly')});}
+      if(M===5){var pl5={};var er=document.getElementById('effRate');if(er){var ev=parseFloat((er.textContent||'').replace(/[^0-9.]/g,''));if(!isNaN(ev)&&ev>0)pl5.effTaxRate=Math.round(ev);}var rcv=num('raContrib');if(rcv!=null)pl5.raAnnual=rcv;patchPl(pl5);}
+    }catch(e){}
+    post('profile',{profile:rp()});
+  }
+  document.addEventListener('change',function(){snap();},true);
+  document.addEventListener('input',function(){clearTimeout(window.__lsnap);window.__lsnap=setTimeout(snap,450);},true);
+
+  /* 4) Mark the module complete when its final step is reached. */
+  if(typeof gS==='function'){var _g=gS;window.gS=function(n){_g(n);try{if(n>=MAXSTEP){var g=JSON.parse(localStorage.getItem(GKEY))||{};if(!g['m'+M]){g['m'+M]=Date.now();localStorage.setItem(GKEY,JSON.stringify(g));}post('progress');}}catch(e){}snap();};}
+
+  /* 5) Report height so the shell can size the iframe with no inner scrollbar. */
+  function rh(){var lw=document.querySelector('.lw');var h=Math.max(document.body.scrollHeight,document.body.offsetHeight,lw?Math.ceil(lw.getBoundingClientRect().bottom):0);post('height',{height:h});}
+  window.addEventListener('load',function(){rh();setTimeout(rh,250);setTimeout(rh,800);});
+  if(window.ResizeObserver){try{new ResizeObserver(function(){rh()}).observe(document.body)}catch(e){}}
+  window.addEventListener('resize',rh);setInterval(rh,1500);
+})();
+</script>
+
+</body>
+</html>

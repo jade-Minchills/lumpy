@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lumpy - 5-Year Stability Plan</title>
+<style>
+  html,body{margin:0;padding:0;background:#FAF8F4;}
+  body{padding:2px;}
+</style>
+</head>
+<body>
+
+<script>
+/* window.storage shim - lets tools written for the Claude artifact storage API
+   run on a plain static host by backing them with localStorage. No-op if a real
+   window.storage already exists. */
+window.storage = window.storage || {
+  get:function(k){try{var v=localStorage.getItem(k);return Promise.resolve(v==null?null:{key:k,value:v})}catch(e){return Promise.resolve(null)}},
+  set:function(k,v){try{localStorage.setItem(k,v);return Promise.resolve({key:k,value:v})}catch(e){return Promise.resolve(null)}},
+  delete:function(k){try{localStorage.removeItem(k);return Promise.resolve({key:k,deleted:true})}catch(e){return Promise.resolve(null)}},
+  list:function(pfx){try{var ks=[];for(var i=0;i<localStorage.length;i++){var kk=localStorage.key(i);if(!pfx||kk.indexOf(pfx)===0)ks.push(kk)}return Promise.resolve({keys:ks})}catch(e){return Promise.resolve({keys:[]})}}
+};
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --lc:#1A2744;--lo:#FF6B47;--lol:#FFF0EC;--lom:#FFCBBE;
+  --lcr:#FAF8F4;--ls:#F0EBE0;--lm:#6B7590;
+  --lg:#2D9E6B;--lgl:#E8F7F0;--la:#F5A623;--lal:#FEF6E4;
+  --lp:#7C5CBF;--lpl:#F0EDFB;--lpb:#C4B8E8;
+  --lb:rgba(26,39,68,0.1);--lw:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+.lw{font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lcr);border-radius:20px;overflow:hidden}
+.lw-hd{background:var(--lc);padding:22px 28px 18px;display:flex;align-items:center;gap:12px}
+.lw-logo{font-family:'DM Serif Display',serif;font-size:24px;color:#fff}
+.lw-logo em{color:var(--lo);font-style:normal}
+.lw-hdtxt{font-size:13px;color:rgba(255,255,255,0.5);margin-left:4px}
+.lw-bdg{background:var(--lo);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.5px;margin-left:auto}
+.lw-steps{display:flex;background:var(--ls);border-bottom:1px solid var(--lb)}
+.lw-st{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:500;color:var(--lm);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.lw-st.active{color:var(--lo);border-bottom-color:var(--lo);background:rgba(255,107,71,.06)}
+.lw-st.done{color:var(--lg)}
+.lw-st .sn{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+.lw-bd{padding:22px 26px}
+.sc{display:none}.sc.active{display:block}
+.ew{font-size:11px;font-weight:600;color:var(--lo);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.h1{font-family:'DM Serif Display',serif;font-size:24px;color:var(--lc);line-height:1.25;margin-bottom:8px}
+.h1 em{color:var(--lo);font-style:italic}
+.sub{font-size:13px;color:var(--lm);line-height:1.6;margin-bottom:20px}
+.lw-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.lw-f{display:flex;flex-direction:column;gap:5px}
+.lw-f label{font-size:11px;font-weight:600;color:var(--lm);letter-spacing:.3px}
+.lw-f input,.lw-f select{border:1.5px solid var(--lb);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lw);outline:none;transition:border-color .2s}
+.lw-f input:focus,.lw-f select:focus{border-color:var(--lo)}
+.tip{background:var(--lol);border:1px solid var(--lom);border-left:4px solid var(--lo);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#7A3220;line-height:1.5}
+.tip strong{color:var(--lo)}
+.gtip{background:var(--lgl);border:1px solid #90d4b0;border-left:4px solid var(--lg);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#1d5e3a;line-height:1.5}
+.gtip strong{color:var(--lg)}
+.ptip{background:var(--lpl);border:1px solid var(--lpb);border-left:4px solid var(--lp);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#3C2880;line-height:1.5}
+.ptip strong{color:var(--lp)}
+.wtip{background:var(--lal);border:1px solid #f0c060;border-left:4px solid var(--la);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#7a5000;line-height:1.5}
+.wtip strong{color:#c07000}
+.lw-btn{background:var(--lo);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;width:100%;margin-top:16px}
+.lw-btn:hover{background:#e85a38;transform:translateY(-1px)}
+.lw-bts{background:none;color:var(--lm);border:1.5px solid var(--lb);border-radius:12px;padding:12px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px;width:100%}
+.lw-bts:hover{border-color:var(--lc);color:var(--lc)}
+.rc{border-radius:14px;padding:16px 20px;margin-bottom:12px}
+.rc.navy{background:var(--lc)}
+.rc.navy .rl{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.rc.navy .rv{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;line-height:1}
+.rc.navy .rs{font-size:12px;color:rgba(255,255,255,.55);margin-top:5px}
+.rc.green{background:var(--lgl);border:1.5px solid #90d4b0}
+.rc.green .rl{font-size:11px;color:#1a7040;letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.rc.green .rv{font-family:'DM Serif Display',serif;font-size:28px;color:#1a6030;line-height:1}
+.rc.green .rs{font-size:12px;color:#2a8050;margin-top:5px}
+.rc.purple{background:var(--lpl);border:1.5px solid var(--lpb)}
+.rc.purple .rl{font-size:11px;color:#534AB7;letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.rc.purple .rv{font-family:'DM Serif Display',serif;font-size:28px;color:#3C3489;line-height:1}
+.rc.purple .rs{font-size:12px;color:#534AB7;margin-top:5px}
+.ag2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ag3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:14px}
+.sm-stat{background:var(--lw);border:1.5px solid var(--lb);border-radius:12px;padding:12px 14px}
+.sm-stat .sv{font-size:18px;font-weight:600;line-height:1;color:var(--lc)}
+.sm-stat .sl{font-size:11px;color:var(--lm);margin-top:3px}
+.sm-stat.green .sv{color:var(--lg)}
+.sm-stat.amber .sv{color:var(--la)}
+.sm-stat.purple .sv{color:var(--lp)}
+.sm-stat.coral .sv{color:var(--lo)}
+.milestone-track{margin:16px 0}
+.ms-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--lb)}
+.ms-item:last-child{border-bottom:none}
+.ms-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.ms-num.done{background:var(--lgl);color:var(--lg)}
+.ms-num.active{background:var(--lo);color:#fff}
+.ms-num.future{background:var(--ls);color:var(--lm)}
+.ms-body{flex:1}
+.ms-title{font-size:14px;font-weight:600;color:var(--lc);margin-bottom:3px}
+.ms-desc{font-size:12px;color:var(--lm);line-height:1.5}
+.ms-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:8px}
+.tag-now{background:var(--lol);color:var(--lo)}
+.tag-yr1{background:var(--lgl);color:var(--lg)}
+.tag-yr3{background:var(--lpl);color:var(--lp)}
+.tag-yr5{background:var(--ls);color:var(--lm)}
+.progress-wrap{background:#e8e4dc;border-radius:6px;height:10px;overflow:hidden;margin:8px 0 4px}
+.progress-fill{height:100%;border-radius:6px;transition:width .6s ease}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--lb)}
+.action-item:last-child{border-bottom:none}
+.action-num{width:22px;height:22px;border-radius:50%;background:var(--lo);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.action-txt{font-size:13px;color:var(--lc);line-height:1.5}
+.div{border:none;border-top:1px solid var(--lb);margin:18px 0}
+.lw-ft{background:var(--ls);border-top:1px solid var(--lb);padding:11px 26px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--lm)}
+</style>
+
+<div class="lw">
+  <div class="lw-hd">
+    <div class="lw-logo">Lumpy<em>.</em></div>
+    <div class="lw-hdtxt">5-Year Stability Plan</div>
+    <div class="lw-bdg">🛡 Module 3</div>
+  </div>
+  <div class="lw-steps" id="stepBar">
+    <div class="lw-st active" onclick="gS(1)"><span class="sn">1</span>Your Profile</div>
+    <div class="lw-st" onclick="gS(2)"><span class="sn">2</span>Emergency Fund</div>
+    <div class="lw-st" onclick="gS(3)"><span class="sn">3</span>Retirement & Savings</div>
+    <div class="lw-st" onclick="gS(4)"><span class="sn">4</span>Protection</div>
+    <div class="lw-st" onclick="gS(5)"><span class="sn">5</span>Your Roadmap</div>
+  </div>
+
+  <div class="lw-bd">
+
+    <!-- STEP 1 -->
+    <div class="sc active" id="s1">
+      <div class="ew">Step 1 of 5</div>
+      <h2 class="h1">Your financial <em>profile</em></h2>
+      <p class="sub">Tell us where you are now. Every number in your plan comes from this - be honest rather than optimistic.</p>
+      <div class="lw-row">
+        <div class="lw-f"><label>Smoothed monthly income (R)</label><input type="number" id="income" placeholder="e.g. 35000" min="0"></div>
+        <div class="lw-f"><label>Current age</label><input type="number" id="age" placeholder="e.g. 38" min="18" max="70"></div>
+      </div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Monthly Tier 1 expenses (R)</label><input type="number" id="t1exp" placeholder="e.g. 22000" min="0"></div>
+        <div class="lw-f"><label>Current Shield balance (R)</label><input type="number" id="shieldBal" placeholder="e.g. 15000" min="0" value="0"></div>
+      </div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Current Retirement Annuity value (R)</label><input type="number" id="raValue" placeholder="e.g. 80000" min="0" value="0"></div>
+        <div class="lw-f"><label>Current Retirement Annuity monthly contribution (R)</label><input type="number" id="raMonthly" placeholder="e.g. 2000" min="0" value="0"></div>
+      </div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Current Tax-Free Savings Account balance (R)</label><input type="number" id="tfsaBal" placeholder="e.g. 0" min="0" value="0"></div>
+        <div class="lw-f"><label>Planned retirement age</label><select id="retireAge"><option value="60">60</option><option value="65" selected>65</option><option value="67">67</option><option value="70">70</option></select></div>
+      </div>
+      <div class="tip"><strong>Lumpy tip:</strong> Your smoothed monthly income comes from the Income Smoothing System (Module 1). Your Tier 1 expenses come from the Smart Spending Framework (Module 2). Together they define your stability baseline.</div>
+      <button class="lw-btn" onclick="gS(2)">Next: Emergency Fund →</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="sc" id="s2">
+      <div class="ew">Step 2 of 5</div>
+      <h2 class="h1">Your <em>emergency fund</em></h2>
+      <p class="sub">The Shield is your first line of defence. Before long-term savings, you need a cash reserve that makes lean months survivable without borrowing.</p>
+      <div class="rc navy" id="efTarget"><div class="rl">Emergency fund target</div><div class="rv">-</div><div class="rs">6 months of Tier 1 expenses</div></div>
+      <div class="ag2" id="efStats"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:6px">Your Shield build progress</h3>
+      <div id="efProgress"></div>
+      <div class="div"></div>
+      <div id="efMessage"></div>
+      <div class="lw-row" style="margin-top:12px">
+        <div class="lw-f"><label>Monthly Shield top-up (R)</label><input type="number" id="efTopup" placeholder="e.g. 2000" min="0" value="2000" oninput="updEF()"></div>
+        <div class="lw-f"><label>Shield target months</label><select id="efMonths" onchange="updEF()"><option value="3">3 months (minimum)</option><option value="6" selected>6 months (recommended)</option><option value="9">9 months (conservative)</option><option value="12">12 months (maximum security)</option></select></div>
+      </div>
+      <div id="efTimeline"></div>
+      <button class="lw-btn" onclick="gS(3)">Next: Retirement & Savings →</button>
+      <button class="lw-bts" onclick="gS(1)">← Back</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="sc" id="s3">
+      <div class="ew">Step 3 of 5</div>
+      <h2 class="h1">Retirement Annuity <em>&amp; Tax-Free Savings</em></h2>
+      <p class="sub">No employer pension. No retirement match. As a Lumpy, you build this yourself - but you have tools that salaried employees do not.</p>
+      <div class="ag2" id="raStats"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:4px">Retirement Annuity projection at retirement</h3>
+      <p style="font-size:12px;color:var(--lm);margin-bottom:12px">At age <span id="raRetireAge">65</span>, with current contributions growing at 8% per year:</p>
+      <div class="rc purple" id="raProjection"><div class="rl">Projected Retirement Annuity value at retirement</div><div class="rv">-</div><div class="rs">-</div></div>
+      <div class="lw-row" style="margin-top:4px">
+        <div class="lw-f"><label>Increase Retirement Annuity to (R/month)</label><input type="number" id="raNew" placeholder="e.g. 4000" min="0" oninput="updRA()"></div>
+        <div class="lw-f"><label>Projected growth rate (%/year)</label><select id="raRate" onchange="updRA()"><option value="6">6% (conservative)</option><option value="8" selected>8% (moderate)</option><option value="10">10% (optimistic)</option></select></div>
+      </div>
+      <div id="raNewProjection"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:4px">Tax-Free Savings Account</h3>
+      <p style="font-size:12px;color:var(--lm);margin-bottom:12px">A Tax-Free Savings Account lets you save up to R36,000 per year (R3,000 per month), with a lifetime cap of R500,000. All growth - interest, dividends, and capital gains - is completely tax-free. Unlike a Retirement Annuity, you can access it at any time.</p>
+      <div class="lw-row">
+        <div class="lw-f"><label>Monthly Tax-Free Savings Account contribution (R)</label><input type="number" id="tfsaMonthly" placeholder="e.g. 1000" min="0" value="0" oninput="updTFSA()"></div>
+        <div class="lw-f" style="justify-content:flex-end"><label>Projected Tax-Free Savings Account value at retirement</label><div style="border:1.5px solid var(--lb);border-radius:10px;padding:9px 13px;font-size:16px;font-weight:600;color:var(--lg);background:var(--lgl)" id="tfsaProjection">R 0</div></div>
+      </div>
+      <div id="tfsaWarning"></div>
+      <div class="div"></div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="raChart" role="img" aria-label="Line chart showing projected Retirement Annuity growth over time">Retirement Annuity savings projection over time.</canvas></div>
+      <button class="lw-btn" onclick="gS(4)">Next: Protection →</button>
+      <button class="lw-bts" onclick="gS(2)">← Back</button>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="sc" id="s4">
+      <div class="ew">Step 4 of 5</div>
+      <h2 class="h1">Your <em>protection layer</em></h2>
+      <p class="sub">Salaried employees receive group risk cover automatically. As a Lumpy, you replace this yourself. These are not optional extras - they are the floor your plan sits on.</p>
+      <div id="protectionCards"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">Medical aid structure</h3>
+      <div class="lw-row">
+        <div class="lw-f"><label>Medical aid monthly premium (R)</label><input type="number" id="medAid" placeholder="e.g. 5500" min="0" oninput="updProtection()"></div>
+        <div class="lw-f"><label>Coverage level</label><select id="medLevel" onchange="updProtection()"><option value="none">None (significant risk)</option><option value="hosp">Hospital plan only</option><option value="comp">Comprehensive cover</option></select></div>
+      </div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Income protection (R/month cover)</label><input type="number" id="incProt" placeholder="e.g. 25000" min="0" oninput="updProtection()"></div>
+        <div class="lw-f"><label>Life cover (R total sum assured)</label><input type="number" id="lifeCover" placeholder="e.g. 1500000" min="0" oninput="updProtection()"></div>
+      </div>
+      <div id="protectionAssessment"></div>
+      <div class="div"></div>
+      <div class="ptip"><strong>The protection gap for Lumpies:</strong> As a Lumpy working for yourself, employer sick pay and unemployment benefits do not apply to you. Your emergency fund (The Shield) and income protection policy are your personal safety net. This is why Step 2 - building the emergency fund - comes before Step 4.</div>
+      <button class="lw-btn" onclick="gS(5)">Next: Your 5-Year Roadmap →</button>
+      <button class="lw-bts" onclick="gS(3)">← Back</button>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="sc" id="s5">
+      <div class="ew">Step 5 of 5</div>
+      <h2 class="h1">Your <em>5-year stability</em> roadmap</h2>
+      <p class="sub">Here is your personalised plan - month by month priorities, year by year milestones, and the exact sequence to follow.</p>
+      <div class="ag3" id="summaryStats"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:4px">Your milestone sequence</h3>
+      <p style="font-size:12px;color:var(--lm);margin-bottom:12px">Complete these in order. Each one makes the next one possible.</p>
+      <div class="milestone-track" id="milestones"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">Your monthly allocation target</h3>
+      <div id="monthlyAlloc"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">30-day action list</h3>
+      <div id="actionList"></div>
+      <div class="div"></div>
+      <div class="gtip"><strong>The compound principle:</strong> Every rand you put into your Retirement Annuity today is worth more than a rand put in tomorrow. At 8% growth, R1,000 invested today becomes R10,600 in 30 years. The best time to start was yesterday. The second best time is now.</div>
+      <button class="lw-btn" onclick="sendPrompt('I have completed the Lumpy 5-Year Stability Plan (Module 3). Can you help me start the Credit Readiness Strategy (Module 4) - specifically how to document my income, build my credit profile, and prepare for a home loan application as a Lumpy?')">Next Module: Credit Readiness Strategy ↗</button>
+      <button class="lw-bts" onclick="gS(4)">← Back</button>
+    </div>
+
+  </div>
+  <div class="lw-ft">
+    <span>🛡 Lumpy 5-Year Stability Plan - Module 3</span>
+    <span id="ftTxt" style="color:var(--lo);font-weight:600"></span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let raChart=null;
+function v(id){return parseFloat(document.getElementById(id).value)||0}
+function R(n){return 'R '+Math.round(n).toLocaleString()}
+
+function gS(n){
+  if(n===2)compEF();
+  if(n===3){compEF();compRA();}
+  if(n===4)compProtection();
+  if(n===5)compRoadmap();
+  document.querySelectorAll('.sc').forEach((s,i)=>s.classList.toggle('active',i===n-1));
+  document.querySelectorAll('.lw-st').forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1)});
+  document.getElementById('ftTxt').textContent=v('income')>0?'Income: '+R(v('income'))+'/month':'';
+}
+
+function compEF(){
+  const t1=v('t1exp')||v('income')*0.6;
+  const months=parseInt(document.getElementById('efMonths').value)||6;
+  const target=t1*months;
+  const current=v('shieldBal');
+  const pct=Math.min(100,Math.round((current/target)*100));
+  document.getElementById('efTarget').querySelector('.rv').textContent=R(target);
+  document.getElementById('efTarget').querySelector('.rs').textContent=months+' months of Tier 1 expenses ('+R(t1)+'/month)';
+  document.getElementById('efStats').innerHTML='<div class="sm-stat green"><div class="sv">'+R(current)+'</div><div class="sl">Current Shield balance</div></div><div class="sm-stat coral"><div class="sv">'+R(Math.max(0,target-current))+'</div><div class="sl">Still needed</div></div>';
+  document.getElementById('efProgress').innerHTML='<div class="progress-wrap"><div class="progress-fill" style="width:'+pct+'%;background:var(--lg)"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--lm)"><span>'+R(current)+' saved</span><span style="color:var(--lg);font-weight:600">'+pct+'% complete</span><span>'+R(target)+' target</span></div>';
+  updEF();
+}
+
+function updEF(){
+  const t1=v('t1exp')||v('income')*0.6;
+  const months=parseInt(document.getElementById('efMonths').value)||6;
+  const target=t1*months;
+  const current=v('shieldBal');
+  const topup=v('efTopup');
+  const gap=Math.max(0,target-current);
+  const moToFull=topup>0?Math.ceil(gap/topup):null;
+  const pct=Math.min(100,Math.round((current/target)*100));
+  document.getElementById('efProgress').innerHTML='<div class="progress-wrap"><div class="progress-fill" style="width:'+pct+'%;background:var(--lg)"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--lm)"><span>'+R(current)+' saved</span><span style="color:var(--lg);font-weight:600">'+pct+'% complete</span><span>'+R(target)+' target</span></div>';
+  if(pct>=100){
+    document.getElementById('efMessage').innerHTML='<div class="gtip"><strong>Emergency fund complete!</strong> Your Shield holds '+R(current)+' - '+months+' months of Tier 1 cover. You are ready to redirect surplus contributions to your Retirement Annuity and Tax-Free Savings Account.</div>';
+    document.getElementById('efTimeline').innerHTML='';
+  } else if(moToFull){
+    const yrs=Math.floor(moToFull/12),mo=moToFull%12;
+    const timeStr=yrs>0?(yrs+' year'+(yrs>1?'s':'')+(mo>0?' '+mo+' month'+(mo>1?'s':''):'')):(mo+' month'+(mo>1?'s':''));
+    document.getElementById('efMessage').innerHTML='<div class="wtip"><strong>At '+R(topup)+'/month</strong> you will reach your '+months+'-month target in <strong>'+timeStr+'</strong>. Once complete, redirect this amount to your Retirement Annuity.</div>';
+    document.getElementById('efTimeline').innerHTML='<div class="sm-stat amber" style="margin-top:8px"><div class="sv">'+moToFull+' months</div><div class="sl">To full Shield at current top-up rate</div></div>';
+  } else {
+    document.getElementById('efMessage').innerHTML='<div class="tip"><strong>Set a monthly Shield top-up amount</strong> above to see how long it will take to reach your emergency fund target.</div>';
+    document.getElementById('efTimeline').innerHTML='';
+  }
+}
+
+function fvCalc(pv,pmt,r,n){
+  if(r===0)return pv+pmt*n;
+  const m=r/12;
+  return pv*Math.pow(1+m,n)+pmt*(Math.pow(1+m,n)-1)/m;
+}
+
+function compRA(){
+  const income=v('income'),age=v('age')||35;
+  const retAge=parseInt(document.getElementById('retireAge').value)||65;
+  const yrs=Math.max(1,retAge-age),months=yrs*12;
+  const raPV=v('raValue'),raM=v('raMonthly');
+  const rate=parseFloat(document.getElementById('raRate').value)/100||0.08;
+  const maxRA=Math.round(income*0.275);
+  document.getElementById('raStats').innerHTML='<div class="sm-stat purple"><div class="sv">'+R(raM)+'/mo</div><div class="sl">Current Retirement Annuity contribution</div></div><div class="sm-stat green"><div class="sv">'+R(maxRA)+'/mo</div><div class="sl">Maximum deductible (27.5% of income)</div></div>';
+  document.getElementById('raRetireAge').textContent=retAge;
+  const proj=fvCalc(raPV,raM,rate,months);
+  document.getElementById('raProjection').querySelector('.rv').textContent=R(proj);
+  document.getElementById('raProjection').querySelector('.rs').textContent='Over '+yrs+' years at '+(rate*100).toFixed(0)+'% p.a. - current contributions';
+  updRA();
+}
+
+function updRA(){
+  const age=v('age')||35;
+  const retAge=parseInt(document.getElementById('retireAge').value)||65;
+  const yrs=Math.max(1,retAge-age),months=yrs*12;
+  const raPV=v('raValue'),raM=v('raMonthly'),raNew=v('raNew')||raM;
+  const rate=parseFloat(document.getElementById('raRate').value)/100||0.08;
+  const income=v('income'),maxMonthly=Math.round(income*0.275);
+  const projCurrent=fvCalc(raPV,raM,rate,months),projNew=fvCalc(raPV,raNew,rate,months),extra=projNew-projCurrent;
+  if(raNew>0&&raNew!==raM){
+    const cappedNote=raNew>maxMonthly?' (Note: '+R(raNew)+'/month exceeds your 27.5% deductible cap of '+R(maxMonthly)+'/month)':'';
+    document.getElementById('raNewProjection').innerHTML='<div class="rc green" style="margin-top:12px"><div class="rl">Projected Retirement Annuity if you contribute '+R(raNew)+'/month</div><div class="rv">'+R(projNew)+'</div><div class="rs">+'+R(extra)+' more than current contributions'+cappedNote+'</div></div>';
+  } else {
+    document.getElementById('raNewProjection').innerHTML='';
+  }
+  updTFSA();
+  buildRAChart(age,retAge,raPV,raM,raNew,rate);
+}
+
+function updTFSA(){
+  const age=v('age')||35;
+  const retAge=parseInt(document.getElementById('retireAge').value)||65;
+  const yrs=Math.max(1,retAge-age),months=yrs*12;
+  const tfsaPV=v('tfsaBal'),tfsaM=v('tfsaMonthly');
+  const proj=fvCalc(tfsaPV,tfsaM,0.08,months);
+  document.getElementById('tfsaProjection').textContent=R(proj);
+  if(tfsaM*12>36000){
+    document.getElementById('tfsaWarning').innerHTML='<div class="wtip" style="margin-top:8px"><strong>Annual contribution exceeds R36,000 limit.</strong> SARS caps Tax-Free Savings Account contributions at R36,000 per year (R3,000/month). Contributions above this attract a 40% penalty tax.</div>';
+  } else {
+    document.getElementById('tfsaWarning').innerHTML='';
+  }
+}
+
+function buildRAChart(age,retAge,raPV,raM,raNew,rate){
+  const labels=[],dataA=[],dataB=[];
+  const years=Math.max(1,retAge-age);
+  for(let y=0;y<=years;y+=Math.max(1,Math.floor(years/10))){
+    labels.push(age+y);
+    dataA.push(Math.round(fvCalc(raPV,raM,rate,y*12)));
+    if(raNew&&raNew!==raM)dataB.push(Math.round(fvCalc(raPV,raNew,rate,y*12)));
+  }
+  if(!labels.includes(retAge)){
+    labels.push(retAge);
+    dataA.push(Math.round(fvCalc(raPV,raM,rate,years*12)));
+    if(raNew&&raNew!==raM)dataB.push(Math.round(fvCalc(raPV,raNew,rate,years*12)));
+  }
+  const datasets=[{label:'Current contributions',data:dataA,borderColor:'#7C5CBF',backgroundColor:'rgba(124,92,191,0.08)',fill:true,tension:0.3,pointRadius:3}];
+  if(dataB.length)datasets.push({label:'Increased contributions',data:dataB,borderColor:'#2D9E6B',backgroundColor:'rgba(45,158,107,0.08)',fill:true,tension:0.3,pointRadius:3,borderDash:[5,3]});
+  if(!raChart){
+    raChart=new Chart(document.getElementById('raChart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+R(c.raw);}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:'#6b7590'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{family:'DM Sans',size:10},color:'#6b7590',callback:function(v){return v>=1000000?'R'+(v/1000000).toFixed(1)+'m':v>=1000?'R'+(v/1000).toFixed(0)+'k':'R'+v;}},beginAtZero:true}}}});
+  } else {
+    raChart.data.labels=labels;raChart.data.datasets=datasets;raChart.update();
+  }
+}
+
+function compProtection(){
+  const income=v('income'),medAid=v('medAid'),incProt=v('incProt'),lifeCover=v('lifeCover');
+  const medLevel=document.getElementById('medLevel').value;
+  const t1=v('t1exp')||income*0.6;
+  const cards=[
+    {icon:'🏥',title:'Medical aid',status:medLevel==='none'?'red':medLevel==='hosp'?'amber':'green',statusTxt:medLevel==='none'?'Not in place':medLevel==='hosp'?'Hospital plan only':'Comprehensive cover',monthly:medAid>0?R(medAid)+'/month':'Not entered',note:medLevel==='none'?'Private medical cover is non-negotiable for professional Lumpies. Without it, a single hospitalisation can eliminate years of savings.':medLevel==='hosp'?'Hospital plan covers serious events but leaves day-to-day costs uninsured. Consider upgrading when income allows.':'Good. Comprehensive cover protects both catastrophic and routine health costs.'},
+    {icon:'🛡',title:'Income protection',status:incProt===0?'red':incProt<income*0.6?'amber':'green',statusTxt:incProt===0?'Not in place':incProt<income*0.6?'Partial cover':'Adequate cover',monthly:incProt>0?R(incProt)+'/month covered':'R 0',note:incProt===0?'You have no income replacement if you are too ill or injured to work. As a Lumpy working for yourself, employer sick pay does not apply. This is your most critical protection gap. Target at least '+R(Math.round(income*0.75))+'/month in cover.':incProt<income*0.6?'Cover of '+R(incProt)+'/month is below your Tier 1 expenses of '+R(t1)+'/month. Aim to cover at least your smoothed income.':'Cover of '+R(incProt)+'/month replaces most of your smoothed income ('+R(income)+'/month). Good.'},
+    {icon:'🔒',title:'Life cover',status:lifeCover===0?'amber':lifeCover<income*60?'amber':'green',statusTxt:lifeCover===0?'Not in place':lifeCover<income*60?'Below target':'Adequate',monthly:lifeCover>0?R(lifeCover)+' sum assured':'R 0',note:lifeCover===0?'Life cover protects your dependants. A common starting point is '+R(income*120)+' (10 years of income). Discuss with a broker based on your dependants and liabilities.':lifeCover<income*60?'Consider increasing cover to at least '+R(income*120)+' (10 years of income) to adequately protect dependants.':'Good level of life cover relative to income.'},
+  ];
+  document.getElementById('protectionCards').innerHTML=cards.map(function(c){
+    const colMap={red:'#FCE8E4',amber:'#FEF6DC',green:'#E8F7F0'};
+    const txtMap={red:'#B03020',amber:'#A06000',green:'#1A6030'};
+    const bdMap={red:'#F5B7B1',amber:'#F9D87A',green:'#90D4B0'};
+    return '<div style="background:'+colMap[c.status]+';border:1.5px solid '+bdMap[c.status]+';border-radius:14px;padding:14px 16px;margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:14px;font-weight:600;color:var(--lc)">'+c.icon+' '+c.title+'</span><span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+colMap[c.status]+';color:'+txtMap[c.status]+';border:1px solid '+bdMap[c.status]+'">'+c.statusTxt+'</span></div><div style="font-size:13px;font-weight:600;color:'+txtMap[c.status]+';margin-bottom:6px">'+c.monthly+'</div><div style="font-size:12px;color:'+txtMap[c.status]+';line-height:1.5;opacity:0.85">'+c.note+'</div></div>';
+  }).join('');
+  const gaps=cards.filter(function(c){return c.status==='red';}).length;
+  const warnings=cards.filter(function(c){return c.status==='amber';}).length;
+  document.getElementById('protectionAssessment').innerHTML=gaps>0?
+    '<div class="tip"><strong>'+gaps+' critical gap'+(gaps>1?'s':'')+' identified.</strong> Income protection is the highest priority for Lumpies. Without it, illness or injury translates directly into financial crisis. Address red items before increasing Retirement Annuity contributions.</div>':
+    warnings>0?'<div class="wtip"><strong>Your protection is partially in place.</strong> Address amber items as your income grows. Your current Shield provides short-term cover while longer-term protection is being built.</div>':
+    '<div class="gtip"><strong>Your protection layer is strong.</strong> All three pillars are in place. Review annually and after any significant income or life change.</div>';
+}
+
+function compRoadmap(){
+  const income=v('income'),age=v('age')||35;
+  const retAge=parseInt(document.getElementById('retireAge').value)||65;
+  const t1=v('t1exp')||income*0.6,shield=v('shieldBal');
+  const efMonths=parseInt(document.getElementById('efMonths').value)||6;
+  const efTarget=t1*efMonths,efDone=shield>=efTarget;
+  const raM=v('raMonthly'),tfsaM=v('tfsaMonthly'),incProt=v('incProt');
+  const medLevel=document.getElementById('medLevel').value;
+  const maxRA=Math.round(income*0.275);
+  const yrs=Math.max(1,retAge-age);
+  const rate=parseFloat(document.getElementById('raRate').value)/100||0.08;
+  const projRA=fvCalc(v('raValue'),raM,rate,yrs*12);
+  const projTFSA=fvCalc(v('tfsaBal'),tfsaM,0.08,yrs*12);
+  document.getElementById('summaryStats').innerHTML='<div class="sm-stat green"><div class="sv">'+R(efTarget)+'</div><div class="sl">Emergency fund target</div></div><div class="sm-stat purple"><div class="sv">'+R(projRA)+'</div><div class="sl">Projected Retirement Annuity at '+retAge+'</div></div><div class="sm-stat amber"><div class="sv">'+R(projRA+projTFSA)+'</div><div class="sl">Total projected savings at '+retAge+'</div></div>';
+  const ms=[
+    {title:'Build the emergency fund',desc:'Target: '+R(efTarget)+' ('+efMonths+' months of Tier 1 expenses). '+(efDone?'Done - Shield is fully funded.':shield>0?'In progress - '+R(shield)+' of '+R(efTarget)+' saved.':'Start here. Nothing else before this.'),tag:'tag-now',done:efDone,active:!efDone},
+    {title:'Secure income protection',desc:'Replace employer sick pay with a policy covering at least '+R(Math.round(income*0.75))+'/month. '+(incProt>=income*0.75?'In place.':'Priority after emergency fund.'),tag:'tag-now',done:incProt>=income*0.75,active:incProt<income*0.75},
+    {title:'Set up medical aid',desc:medLevel==='comp'?'Comprehensive cover in place.':medLevel==='hosp'?'Hospital plan in place - consider upgrading when income allows.':'Not yet in place. Critical gap.',tag:'tag-now',done:medLevel==='comp',active:medLevel==='none'},
+    {title:'Start or grow your Retirement Annuity',desc:'Current: '+R(raM)+'/month. Target: '+R(maxRA)+'/month (27.5% of income, maximum SARS deduction). Projected at '+retAge+': '+R(projRA)+'.',tag:'tag-yr1',done:raM>=maxRA,active:raM>0&&raM<maxRA},
+    {title:'Open a Tax-Free Savings Account',desc:'Contribute up to R3,000/month (R36,000/year, lifetime cap R500,000). All growth is completely tax-free. '+(tfsaM>0?'Currently contributing '+R(tfsaM)+'/month.':'Not yet started.'),tag:'tag-yr1',done:tfsaM>=3000,active:tfsaM>0&&tfsaM<3000},
+    {title:'Annual financial review',desc:'Review and recalibrate every 12 months: Retirement Annuity contribution vs 27.5% cap, Tax-Free Savings Account balance vs lifetime limit, protection cover vs current income level.',tag:'tag-yr3',done:false,active:false},
+    {title:'Income diversification review',desc:'By year 3-5, assess whether additional income streams, asset investments, or business structure changes would accelerate long-term stability.',tag:'tag-yr5',done:false,active:false},
+  ];
+  document.getElementById('milestones').innerHTML=ms.map(function(m,i){return '<div class="ms-item"><div class="ms-num '+(m.done?'done':m.active?'active':'future')+'">'+(m.done?'✓':i+1)+'</div><div class="ms-body"><div class="ms-title">'+m.title+'<span class="ms-tag '+m.tag+'">'+(m.tag==='tag-now'?'Now':m.tag==='tag-yr1'?'Year 1-2':m.tag==='tag-yr3'?'Year 3-4':'Year 5')+'</span></div><div class="ms-desc">'+m.desc+'</div></div></div>';}).join('');
+  const allocRows=[
+    {label:'Tier 1 expenses (must pay)',amt:t1,color:'#C0392B'},
+    {label:'Emergency fund top-up',amt:efDone?0:(v('efTopup')||0),color:efDone?'#ccc':'#F5A623'},
+    {label:'Retirement Annuity',amt:raM,color:'#7C5CBF'},
+    {label:'Tax-Free Savings Account',amt:tfsaM,color:'#2D9E6B'},
+    {label:'Available (Tier 2/3 spending + Shield surplus)',amt:Math.max(0,income-t1-(efDone?0:(v('efTopup')||0))-raM-tfsaM),color:'#1A2744'},
+  ];
+  document.getElementById('monthlyAlloc').innerHTML=allocRows.map(function(r){return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--lb)"><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:'+r.color+'"></div><span style="font-size:13px;color:var(--lc)">'+r.label+'</span></div><span style="font-size:13px;font-weight:600;color:'+r.color+'">'+R(r.amt)+'/mo</span></div>';}).join('');
+  const actions=[
+    !efDone?'Open or label a dedicated Shield sub-account and set up a '+R(v('efTopup')||2000)+'/month automatic transfer':'Confirm your Shield balance and label it clearly as the emergency fund',
+    incProt<income*0.75?'Get three income protection quotes this week - target '+R(Math.round(income*0.75))+'/month in cover':'Review your income protection policy matches your current income level',
+    raM<maxRA?'Instruct your Retirement Annuity provider to increase your monthly debit order to '+R(maxRA)+' (or as close as you can afford now)':'Confirm your Retirement Annuity debit order is running and review the fund selection annually',
+    tfsaM===0?'Open a Tax-Free Savings Account at any South African bank or investment platform and start a R500/month debit order':'Confirm your Tax-Free Savings Account debit order is active and you are within the R36,000 annual limit',
+    medLevel==='none'?'Get medical aid quotes this week - a hospital plan is the minimum acceptable floor':'Review your medical aid plan selection at the next annual open enrolment period',
+    'Diarise an annual financial review for 12 months from today - one hour to recalibrate every number in this plan',
+  ];
+  document.getElementById('actionList').innerHTML=actions.map(function(a,i){return '<div class="action-item"><div class="action-num">'+(i+1)+'</div><div class="action-txt">'+a+'</div></div>';}).join('');
+}
+</script>
+
+<script>
+/* Lumpy shell bridge - does NOT touch any tool calculation. */
+(function(){
+  var M=3, MAXSTEP=5;
+  var PKEY='lumpy_profile_v1', GKEY='lumpy_progress_v1', TKEY='lumpy_tool_'+M+'_v1', PLKEY='lumpy_profile';
+  function rp(){try{return JSON.parse(localStorage.getItem(PKEY))||{}}catch(e){return{}}}
+  function wp(p){try{localStorage.setItem(PKEY,JSON.stringify(p))}catch(e){}}
+  function rpl(){try{return JSON.parse(localStorage.getItem(PLKEY))||{}}catch(e){return{}}}
+  function savedStr(){try{var d=new Date();return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}catch(e){return 'just now'}}
+  function post(type,extra){try{if(window.parent&&window.parent!==window){var m={lumpy:type,module:M};if(extra)for(var k in extra)m[k]=extra[k];window.parent.postMessage(m,'*')}}catch(e){}}
+  function patch(o){var p=rp(),ch=false;for(var k in o){var val=o[k];if(val===null||val===undefined||val==='')continue;if(typeof val==='number'&&(isNaN(val)||!isFinite(val)))continue;if(p[k]!==val){p[k]=val;ch=true}}if(ch){wp(p);post('profile',{profile:p})}}
+  /* lumpy_profile: the 9-field foundation object that Module 6 (Annual Planner) reads. */
+  function patchPl(o){var p=rpl(),ch=false;for(var k in o){var val=o[k];if(val===null||val===undefined||val==='')continue;if(typeof val==='number'&&(isNaN(val)||!isFinite(val)))continue;if(p[k]!==val){p[k]=val;ch=true}}if(ch){p.savedAt=savedStr();try{localStorage.setItem(PLKEY,JSON.stringify(p))}catch(e){}post('profile',{})}}
+  function setV(id,val){var el=document.getElementById(id);if(!el||val===null||val===undefined||val==='')return;el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
+  function num(id){var el=document.getElementById(id);if(!el)return null;var n=parseFloat(el.value);return isNaN(n)?null:n;}
+
+  /* Dynamically-added rows (expenses / deductions) - saved and replayed via each tool's own add fn. */
+  var ROWS={1:{c:'#expList',add:'addE',sel:'.er'},2:{c:'#expList',add:'addExp',sel:'.exp-row'},5:{c:'#dedList',add:'addDed',sel:'.deduct-row'}};
+  function readRows(){var cfg=ROWS[M];if(!cfg)return null;var box=document.querySelector(cfg.c);if(!box)return null;var out=[];box.querySelectorAll(cfg.sel).forEach(function(r){var t=r.querySelector('input[type=text]'),s=r.querySelector('select'),a=r.querySelector('input[type=number]');out.push([t?t.value:'',a?(parseFloat(a.value)||0):0,s?s.value:'']);});return out;}
+  function restoreRows(){var cfg=ROWS[M];if(!cfg)return;var raw=null;try{raw=localStorage.getItem(TKEY+'_rows')}catch(e){return}if(raw===null)return;var rows;try{rows=JSON.parse(raw)}catch(e){return}if(!Array.isArray(rows))return;var box=document.querySelector(cfg.c),addFn=window[cfg.add];if(!box||typeof addFn!=='function')return;var g=0;while(box.querySelector('.del')&&g++<200){box.querySelector('.del').click();}rows.forEach(function(r){try{addFn(r[0],r[1],r[2])}catch(e){}});}
+
+  /* Module 6 income forecast persistence (the 12 forecast cells have no ids). */
+  function readForecast(){var g=document.getElementById('incomeGrid');if(!g)return null;return [].map.call(g.querySelectorAll('input[type=number]'),function(i){return i.value});}
+  function applyForecast(){var raw=null;try{raw=localStorage.getItem(TKEY+'_forecast')}catch(e){return}if(!raw)return;var arr;try{arr=JSON.parse(raw)}catch(e){return}if(!Array.isArray(arr))return;var g=document.getElementById('incomeGrid');if(!g)return;var ins=g.querySelectorAll('input[type=number]');arr.forEach(function(val,i){if(ins[i]&&val!==''&&val!=null){ins[i].value=val;ins[i].dispatchEvent(new Event('input',{bubbles:true}));}});}
+  if(M===6&&typeof buildIncomeGrid==='function'){var _big=buildIncomeGrid;window.buildIncomeGrid=function(){var r=_big.apply(this,arguments);applyForecast();return r;};}
+
+  /* The tools' "Next module" buttons call sendPrompt(); repurpose it to advance within the shell. */
+  window.sendPrompt=function(){post('next');};
+
+  /* 1) Restore this tool's own previously entered fields (Module 6 foundations are owned by loadProfile). */
+  var SKIP6=(M===6)?{smoothedIncome:1,shieldTopup:1,t1:1,t2:1,t3:1,raMonthly:1,tfsaMonthly:1,effTaxRate:1,raAnnual:1}:null;
+  try{var s=JSON.parse(localStorage.getItem(TKEY))||{};Object.keys(s).forEach(function(id){if(SKIP6&&SKIP6[id])return;var el=document.getElementById(id);if(el&&document.activeElement!==el){el.value=s[id];el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}});}catch(e){}
+  restoreRows();
+
+  /* 2) Prefill shared values from earlier modules (these win over stale local copies). */
+  var p=rp();
+  if(M===2){setV('smoothed',p.income);setV('cur',p.currency);}
+  if(M===3){setV('income',p.income);setV('t1exp',p.tier1);}
+  if(M===4){setV('income',p.income);setV('shieldBal',p.shield);setV('raValue',p.raValue);}
+  if(M===5){setV('grossIncome',p.grossAnnual);}
+  /* Module 6 prefills itself via its own loadProfile() reading 'lumpy_profile'. */
+
+  /* 3) Harvest: persist fields and push shared outputs to both the shell profile and the planner profile. */
+  function tier1FromDOM(){var t=0;document.querySelectorAll('#expList .er').forEach(function(r){var sel=r.querySelector('select'),amt=r.querySelector('input[type=number]');if(sel&&amt&&sel.value==='1')t+=parseFloat(amt.value)||0;});return t;}
+  function snap(){
+    try{var map={};document.querySelectorAll('input[id],select[id]').forEach(function(el){if(el.id&&el.type!=='button')map[el.id]=el.value;});localStorage.setItem(TKEY,JSON.stringify(map));}catch(e){}
+    try{var rr=readRows();if(rr)localStorage.setItem(TKEY+'_rows',JSON.stringify(rr));}catch(e){}
+    try{if(M===6){var fc=readForecast();if(fc)localStorage.setItem(TKEY+'_forecast',JSON.stringify(fc));}}catch(e){}
+    try{
+      if(M===1){
+        var o={};if(typeof getSm==='function'){var sm=getSm();if(sm>0)o.income=Math.round(sm);}if(typeof tax==='function'){o.taxRate=tax();}if(typeof cur==='function'){o.currency=cur();}var t1=tier1FromDOM();if(t1>0)o.tier1=Math.round(t1);var ga=0;for(var i=0;i<12;i++){var mi=document.getElementById('m'+i);if(mi)ga+=parseFloat(mi.value)||0;}if(ga>0)o.grossAnnual=Math.round(ga);patch(o);
+        var pl={};var smx=(typeof getSm==='function')?getSm():0;if(smx>0)pl.smoothedIncome=Math.round(smx);if(typeof tax==='function')pl.effTaxRate=Math.round(tax());
+        try{var rt=(typeof tax==='function')?tax()/100:0;var tA=smx*rt;var tE=0;document.querySelectorAll('#expList .er input[type=number]').forEach(function(x){tE+=parseFloat(x.value)||0;});var lA=Math.min(tE,smx-tA);var bA=Math.max(0,smx-tA-lA);if(smx>0)pl.shieldTopup=Math.round(bA);}catch(e){}
+        patchPl(pl);
+      }
+      if(M===2){var pl2={};if(typeof totByTier==='function'){pl2.t1=Math.round(totByTier('1'));pl2.t2=Math.round(totByTier('2'));pl2.t3=Math.round(totByTier('3'));}patchPl(pl2);}
+      if(M===3){patch({shield:num('shieldBal'),raValue:num('raValue'),tier1:num('t1exp'),income:num('income')});patchPl({raMonthly:num('raMonthly'),tfsaMonthly:num('tfsaMonthly')});}
+      if(M===5){var pl5={};var er=document.getElementById('effRate');if(er){var ev=parseFloat((er.textContent||'').replace(/[^0-9.]/g,''));if(!isNaN(ev)&&ev>0)pl5.effTaxRate=Math.round(ev);}var rcv=num('raContrib');if(rcv!=null)pl5.raAnnual=rcv;patchPl(pl5);}
+    }catch(e){}
+    post('profile',{profile:rp()});
+  }
+  document.addEventListener('change',function(){snap();},true);
+  document.addEventListener('input',function(){clearTimeout(window.__lsnap);window.__lsnap=setTimeout(snap,450);},true);
+
+  /* 4) Mark the module complete when its final step is reached. */
+  if(typeof gS==='function'){var _g=gS;window.gS=function(n){_g(n);try{if(n>=MAXSTEP){var g=JSON.parse(localStorage.getItem(GKEY))||{};if(!g['m'+M]){g['m'+M]=Date.now();localStorage.setItem(GKEY,JSON.stringify(g));}post('progress');}}catch(e){}snap();};}
+
+  /* 5) Report height so the shell can size the iframe with no inner scrollbar. */
+  function rh(){var lw=document.querySelector('.lw');var h=Math.max(document.body.scrollHeight,document.body.offsetHeight,lw?Math.ceil(lw.getBoundingClientRect().bottom):0);post('height',{height:h});}
+  window.addEventListener('load',function(){rh();setTimeout(rh,250);setTimeout(rh,800);});
+  if(window.ResizeObserver){try{new ResizeObserver(function(){rh()}).observe(document.body)}catch(e){}}
+  window.addEventListener('resize',rh);setInterval(rh,1500);
+})();
+</script>
+
+</body>
+</html>

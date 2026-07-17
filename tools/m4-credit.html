@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lumpy - Credit Readiness Strategy</title>
+<style>
+  html,body{margin:0;padding:0;background:#FAF8F4;}
+  body{padding:2px;}
+</style>
+</head>
+<body>
+
+<script>
+/* window.storage shim - lets tools written for the Claude artifact storage API
+   run on a plain static host by backing them with localStorage. No-op if a real
+   window.storage already exists. */
+window.storage = window.storage || {
+  get:function(k){try{var v=localStorage.getItem(k);return Promise.resolve(v==null?null:{key:k,value:v})}catch(e){return Promise.resolve(null)}},
+  set:function(k,v){try{localStorage.setItem(k,v);return Promise.resolve({key:k,value:v})}catch(e){return Promise.resolve(null)}},
+  delete:function(k){try{localStorage.removeItem(k);return Promise.resolve({key:k,deleted:true})}catch(e){return Promise.resolve(null)}},
+  list:function(pfx){try{var ks=[];for(var i=0;i<localStorage.length;i++){var kk=localStorage.key(i);if(!pfx||kk.indexOf(pfx)===0)ks.push(kk)}return Promise.resolve({keys:ks})}catch(e){return Promise.resolve({keys:[]})}}
+};
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --lc:#1A2744;--lo:#FF6B47;--lol:#FFF0EC;--lom:#FFCBBE;
+  --lcr:#FAF8F4;--ls:#F0EBE0;--lm:#6B7590;
+  --lg:#2D9E6B;--lgl:#E8F7F0;--la:#F5A623;--lal:#FEF6E4;
+  --lb:rgba(26,39,68,0.1);--lw:#FFFFFF;
+  --lt:#1A5080;--ltl:#E5F0FC;--ltb:#8BBFEC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+.lw{font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lcr);border-radius:20px;overflow:hidden}
+.lw-hd{background:var(--lc);padding:22px 28px 18px;display:flex;align-items:center;gap:12px}
+.lw-logo{font-family:'DM Serif Display',serif;font-size:24px;color:#fff}
+.lw-logo em{color:var(--lo);font-style:normal}
+.lw-hdtxt{font-size:13px;color:rgba(255,255,255,0.5);margin-left:4px}
+.lw-bdg{background:var(--lo);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.5px;margin-left:auto}
+.lw-steps{display:flex;background:var(--ls);border-bottom:1px solid var(--lb)}
+.lw-st{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:500;color:var(--lm);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.lw-st.active{color:var(--lo);border-bottom-color:var(--lo);background:rgba(255,107,71,.06)}
+.lw-st.done{color:var(--lg)}
+.lw-st .sn{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+.lw-bd{padding:22px 26px}
+.sc{display:none}.sc.active{display:block}
+.ew{font-size:11px;font-weight:600;color:var(--lo);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.h1{font-family:'DM Serif Display',serif;font-size:24px;color:var(--lc);line-height:1.25;margin-bottom:8px}
+.h1 em{color:var(--lo);font-style:italic}
+.sub{font-size:13px;color:var(--lm);line-height:1.6;margin-bottom:20px}
+.lw-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.lw-f{display:flex;flex-direction:column;gap:5px}
+.lw-f label{font-size:11px;font-weight:600;color:var(--lm);letter-spacing:.3px}
+.lw-f input,.lw-f select{border:1.5px solid var(--lb);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--lc);background:var(--lw);outline:none;transition:border-color .2s}
+.lw-f input:focus,.lw-f select:focus{border-color:var(--lo)}
+.tip{background:var(--lol);border:1px solid var(--lom);border-left:4px solid var(--lo);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#7A3220;line-height:1.5}
+.tip strong{color:var(--lo)}
+.gtip{background:var(--lgl);border:1px solid #90d4b0;border-left:4px solid var(--lg);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#1d5e3a;line-height:1.5}
+.gtip strong{color:var(--lg)}
+.wtip{background:var(--lal);border:1px solid #f0c060;border-left:4px solid var(--la);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#7a5000;line-height:1.5}
+.wtip strong{color:#c07000}
+.btip{background:var(--ltl);border:1px solid var(--ltb);border-left:4px solid var(--lt);border-radius:0 12px 12px 0;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#1A3A5A;line-height:1.5}
+.btip strong{color:var(--lt)}
+.lw-btn{background:var(--lo);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;width:100%;margin-top:16px}
+.lw-btn:hover{background:#e85a38;transform:translateY(-1px)}
+.lw-bts{background:none;color:var(--lm);border:1.5px solid var(--lb);border-radius:12px;padding:12px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px;width:100%}
+.lw-bts:hover{border-color:var(--lc);color:var(--lc)}
+.rc{border-radius:14px;padding:16px 20px;margin-bottom:12px}
+.rc.navy{background:var(--lc)}
+.rc.navy .rl{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.rc.navy .rv{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;line-height:1}
+.rc.navy .rs{font-size:12px;color:rgba(255,255,255,.55);margin-top:5px}
+.score-ring-wrap{display:flex;justify-content:center;margin:16px 0 18px}
+.score-ring{position:relative;width:130px;height:130px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--lc);line-height:1}
+.score-lbl{font-size:10px;color:var(--lm);font-weight:600;letter-spacing:.5px}
+.ag2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ag3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:14px}
+.sm-stat{background:var(--lw);border:1.5px solid var(--lb);border-radius:12px;padding:12px 14px}
+.sm-stat .sv{font-size:18px;font-weight:600;line-height:1;color:var(--lc)}
+.sm-stat .sl{font-size:11px;color:var(--lm);margin-top:3px}
+.sm-stat.green .sv{color:var(--lg)}
+.sm-stat.amber .sv{color:var(--la)}
+.sm-stat.red .sv{color:#C0392B}
+.sm-stat.blue .sv{color:var(--lt)}
+.doc-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--lb)}
+.doc-row:last-child{border-bottom:none}
+.doc-name{font-size:13px;color:var(--lc);font-weight:500}
+.doc-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.ds-have{background:var(--lgl);color:#1a6030}
+.ds-partial{background:var(--lal);color:#8a6000}
+.ds-need{background:#FCE8E4;color:#B03020}
+.progress-wrap{background:#e8e4dc;border-radius:6px;height:10px;overflow:hidden;margin:8px 0 4px}
+.progress-fill{height:100%;border-radius:6px;transition:width .6s ease}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--lb)}
+.action-item:last-child{border-bottom:none}
+.action-num{width:22px;height:22px;border-radius:50%;background:var(--lo);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.action-txt{font-size:13px;color:var(--lc);line-height:1.5}
+.div{border:none;border-top:1px solid var(--lb);margin:18px 0}
+.lw-ft{background:var(--ls);border-top:1px solid var(--lb);padding:11px 26px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--lm)}
+.dti-bar{height:16px;border-radius:8px;overflow:hidden;display:flex;margin:10px 0 6px}
+.dti-seg{height:100%;transition:width .5s}
+</style>
+
+<div class="lw">
+  <div class="lw-hd">
+    <div class="lw-logo">Lumpy<em>.</em></div>
+    <div class="lw-hdtxt">Credit Readiness Strategy</div>
+    <div class="lw-bdg">🏦 Module 4</div>
+  </div>
+  <div class="lw-steps" id="stepBar">
+    <div class="lw-st active" onclick="gS(1)"><span class="sn">1</span>Your Profile</div>
+    <div class="lw-st" onclick="gS(2)"><span class="sn">2</span>Income Proof</div>
+    <div class="lw-st" onclick="gS(3)"><span class="sn">3</span>Debt & Credit</div>
+    <div class="lw-st" onclick="gS(4)"><span class="sn">4</span>Deposit & Assets</div>
+    <div class="lw-st" onclick="gS(5)"><span class="sn">5</span>Your Score</div>
+  </div>
+
+  <div class="lw-bd">
+
+    <!-- STEP 1 -->
+    <div class="sc active" id="s1">
+      <div class="ew">Step 1 of 5</div>
+      <h2 class="h1">Your credit <em>profile</em></h2>
+      <p class="sub">Tell us what you are applying for and where you stand. Lenders assess irregular income earners differently - this module shows you exactly what they look for and how to present your strongest case.</p>
+      <div class="lw-row">
+        <div class="lw-f"><label>Credit goal</label>
+          <select id="creditGoal">
+            <option value="bond">Home loan (bond)</option>
+            <option value="vehicle">Vehicle finance</option>
+            <option value="business">Business finance</option>
+            <option value="personal">Personal loan</option>
+            <option value="general">General credit readiness</option>
+          </select>
+        </div>
+        <!-- Monthly income: step 500 (R500 increments) -->
+        <div class="lw-f"><label>Smoothed monthly income (R)</label>
+          <input type="number" id="income" placeholder="e.g. 35000" min="0" step="500">
+        </div>
+      </div>
+      <div class="lw-row">
+        <!-- Years: step 0.5 (half-year increments) -->
+        <div class="lw-f"><label>Years self-employed / freelancing</label>
+          <input type="number" id="yearsTrading" placeholder="e.g. 3" min="0" step="0.5">
+        </div>
+        <div class="lw-f"><label>Entity type</label>
+          <select id="entityType">
+            <option value="sole">Sole proprietor / freelancer</option>
+            <option value="company">Company (Pty Ltd)</option>
+            <option value="cc">Close Corporation (CC)</option>
+          </select>
+        </div>
+      </div>
+      <div class="lw-row">
+        <!-- Credit score: step 5 (5-point increments) -->
+        <div class="lw-f"><label>Credit score (if known)</label>
+          <input type="number" id="creditScore" placeholder="e.g. 680" min="300" max="900" step="5">
+        </div>
+        <div class="lw-f"><label>Credit bureau checked in last 12 months?</label>
+          <select id="bureauChecked">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="tip"><strong>Lumpy tip:</strong> South African lenders use three credit bureaus - TransUnion, Experian, and Compuscan (XDS). You are entitled to one free credit report per year from each. A score of 610+ is the typical minimum for a home loan; 700+ qualifies for preferential rates.</div>
+      <button class="lw-btn" onclick="gS(2)">Next: Income Proof →</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="sc" id="s2">
+      <div class="ew">Step 2 of 5</div>
+      <h2 class="h1">Proving your <em>income to lenders</em></h2>
+      <p class="sub">Without a payslip, you prove income through documentation. Lenders need at least 2 years of consistent, verifiable income history. Tell us what you have.</p>
+      <div id="incomeDocChecklist"></div>
+      <div class="div"></div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Years of filed SARS tax assessments (ITA34)</label>
+          <select id="taxYears">
+            <option value="0">None filed</option>
+            <option value="1">1 year</option>
+            <option value="2">2 years</option>
+            <option value="3">3+ years</option>
+          </select>
+        </div>
+        <div class="lw-f"><label>Signed financial statements available?</label>
+          <select id="finStatements">
+            <option value="none">None</option>
+            <option value="1year">1 year</option>
+            <option value="2years">2+ years (signed by accountant)</option>
+          </select>
+        </div>
+      </div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Bank statements available (months)</label>
+          <select id="bankStatements">
+            <option value="0">None / less than 3</option>
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12">12 months</option>
+          </select>
+        </div>
+        <div class="lw-f"><label>Business and personal accounts separated?</label>
+          <select id="accountsSeparated">
+            <option value="no">No - I use one account</option>
+            <option value="yes">Yes - separate accounts</option>
+          </select>
+        </div>
+      </div>
+      <div id="incomeDocScore"></div>
+      <div class="div"></div>
+      <div class="btip"><strong>The tax minimisation paradox:</strong> If you have legitimately reduced your taxable income through SARS deductions, your ITA34 assessments will show a lower income figure than you actually earn. Banks use these assessments as income verification. Plan ahead - discuss with your tax practitioner how to balance tax efficiency against lender income requirements before applying for credit.</div>
+      <button class="lw-btn" onclick="gS(3)">Next: Debt and Credit →</button>
+      <button class="lw-bts" onclick="gS(1)">← Back</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="sc" id="s3">
+      <div class="ew">Step 3 of 5</div>
+      <h2 class="h1">Your debt <em>&amp; credit profile</em></h2>
+      <p class="sub">South African lenders use the National Credit Act affordability assessment. Your debt-to-income ratio and credit record are the two most critical factors.</p>
+      <div class="lw-row">
+        <!-- Monthly debt repayments: step 500 -->
+        <div class="lw-f"><label>Total monthly debt repayments (R)</label>
+          <input type="number" id="monthlyDebt" placeholder="e.g. 8000" min="0" step="500" oninput="updDTI()">
+        </div>
+        <!-- Proposed monthly repayment: step 500 -->
+        <div class="lw-f"><label>Proposed new monthly repayment (R)</label>
+          <input type="number" id="newRepayment" placeholder="e.g. 12000" min="0" step="500" oninput="updDTI()">
+        </div>
+      </div>
+      <div id="dtiResult"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">Credit record assessment</h3>
+      <div class="lw-row">
+        <div class="lw-f"><label>Any adverse listings? (judgements, defaults)</label>
+          <select id="adverseListings">
+            <option value="none">None</option>
+            <option value="old">Yes - older than 24 months</option>
+            <option value="recent">Yes - within last 24 months</option>
+          </select>
+        </div>
+        <div class="lw-f"><label>Payment history</label>
+          <select id="paymentHistory">
+            <option value="excellent">Excellent - never missed a payment</option>
+            <option value="good">Good - occasional late, no defaults</option>
+            <option value="fair">Fair - some missed payments</option>
+            <option value="poor">Poor - frequent missed payments</option>
+          </select>
+        </div>
+      </div>
+      <div class="lw-row">
+        <div class="lw-f"><label>Credit utilisation (% of available credit used)</label>
+          <select id="creditUtil">
+            <option value="low">Under 30% (good)</option>
+            <option value="medium">30-60% (acceptable)</option>
+            <option value="high">Over 60% (concerning)</option>
+          </select>
+        </div>
+        <div class="lw-f"><label>Length of credit history</label>
+          <select id="creditLength">
+            <option value="long">5+ years</option>
+            <option value="medium">2-5 years</option>
+            <option value="short">Under 2 years</option>
+          </select>
+        </div>
+      </div>
+      <div id="creditAssessment"></div>
+      <button class="lw-btn" onclick="gS(4)">Next: Deposit and Assets →</button>
+      <button class="lw-bts" onclick="gS(2)">← Back</button>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="sc" id="s4">
+      <div class="ew">Step 4 of 5</div>
+      <h2 class="h1">Your deposit <em>&amp; assets</em></h2>
+      <p class="sub">A deposit reduces lender risk and significantly improves approval odds for Lumpies. Your asset base signals financial discipline and capacity to repay.</p>
+      <div id="depositSection"></div>
+      <div class="lw-row" id="bondDepositRow" style="display:none">
+        <!-- Property price: step 50000 (R50k increments) -->
+        <div class="lw-f"><label>Property purchase price (R)</label>
+          <input type="number" id="propertyPrice" placeholder="e.g. 1500000" min="0" step="50000" oninput="updDeposit()">
+        </div>
+        <!-- Deposit: step 10000 (R10k increments) -->
+        <div class="lw-f"><label>Deposit available (R)</label>
+          <input type="number" id="depositAmt" placeholder="e.g. 150000" min="0" step="10000" oninput="updDeposit()">
+        </div>
+      </div>
+      <div id="depositCalc"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">Your financial asset base</h3>
+      <div class="lw-row">
+        <!-- Shield balance: step 5000 (R5k increments) -->
+        <div class="lw-f"><label>Emergency fund / Shield balance (R)</label>
+          <input type="number" id="shieldBal" placeholder="e.g. 120000" min="0" step="5000" value="0" oninput="updAssets()">
+        </div>
+        <!-- RA value: step 10000 (R10k increments) -->
+        <div class="lw-f"><label>Retirement Annuity value (R)</label>
+          <input type="number" id="raValue" placeholder="e.g. 250000" min="0" step="10000" value="0" oninput="updAssets()">
+        </div>
+      </div>
+      <div class="lw-row">
+        <!-- TFSA value: step 5000 (R5k increments) -->
+        <div class="lw-f"><label>Tax-Free Savings Account value (R)</label>
+          <input type="number" id="tfsaValue" placeholder="e.g. 50000" min="0" step="5000" value="0" oninput="updAssets()">
+        </div>
+        <!-- Other assets: step 5000 (R5k increments) -->
+        <div class="lw-f"><label>Other savings / investments (R)</label>
+          <input type="number" id="otherAssets" placeholder="e.g. 30000" min="0" step="5000" value="0" oninput="updAssets()">
+        </div>
+      </div>
+      <div id="assetSummary"></div>
+      <div class="div"></div>
+      <div class="wtip"><strong>Months of repayments in reserve:</strong> South African banks respond positively to self-employed applicants who can demonstrate 3-6 months of the proposed repayment amount sitting in savings. This single factor can make the difference between approval and decline for Lumpies.</div>
+      <button class="lw-btn" onclick="gS(5)">Next: Your Readiness Score →</button>
+      <button class="lw-bts" onclick="gS(3)">← Back</button>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="sc" id="s5">
+      <div class="ew">Step 5 of 5</div>
+      <h2 class="h1">Your <em>credit readiness</em> score</h2>
+      <p class="sub">Here is your overall credit readiness picture - what is working in your favour, what needs attention, and your personalised action plan.</p>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg width="130" height="130" viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#F0EBE0" stroke-width="12"/>
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#FF6B47" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.3" id="scoreCircle" stroke-dashoffset="339.3"/>
+          </svg>
+          <div class="score-center"><div class="score-num" id="scoreNum">-</div><div class="score-lbl">READINESS</div></div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:13px;color:var(--lm);margin-bottom:20px" id="scoreDesc">Calculating your readiness…</p>
+      <div class="ag3" id="scoreStats"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:4px">Strengths and gaps</h3>
+      <p style="font-size:12px;color:var(--lm);margin-bottom:12px">What lenders will see when they assess your application.</p>
+      <div id="strengthsGaps"></div>
+      <div class="div"></div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:8px">Your action plan</h3>
+      <div id="actionPlan"></div>
+      <div class="div"></div>
+      <div class="btip"><strong>The Lumpy credit advantage:</strong> Your income documentation discipline, clean financial records, and demonstrated Shield balance can be more compelling to a lender than a payslip. Banks approve self-employed borrowers every day - they just need the evidence presented in the right way.</div>
+      <button class="lw-btn" onclick="sendPrompt('I have completed the Lumpy Credit Readiness Strategy (Module 4). Can you help me understand the Tax Management System (Module 5) - specifically how provisional tax works, what I should be setting aside, and how my Retirement Annuity contributions reduce my SARS bill?')">Next Module: Tax Management System ↗</button>
+      <button class="lw-bts" onclick="gS(4)">← Back</button>
+    </div>
+  </div>
+  <div class="lw-ft">
+    <span>🏦 Lumpy Credit Readiness Strategy - Module 4</span>
+    <span id="ftTxt" style="color:var(--lo);font-weight:600"></span>
+  </div>
+</div>
+
+<script>
+function v(id){return parseFloat(document.getElementById(id).value)||0;}
+function sv(id){return document.getElementById(id).value;}
+function R(n){return 'R '+Math.round(n).toLocaleString();}
+
+function gS(n){
+  if(n===2)compIncomeDocs();
+  if(n===3)compCredit();
+  if(n===4)compDeposit();
+  if(n===5)compScore();
+  document.querySelectorAll('.sc').forEach(function(s,i){s.classList.toggle('active',i===n-1);});
+  document.querySelectorAll('.lw-st').forEach(function(s,i){s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1);});
+  var inc=v('income');
+  document.getElementById('ftTxt').textContent=inc>0?'Income: '+R(inc)+'/month':'';
+}
+
+function compIncomeDocs(){
+  var ty=parseInt(sv('taxYears'))||0;
+  var fs=sv('finStatements');
+  var bs=parseInt(sv('bankStatements'))||0;
+  var sep=sv('accountsSeparated');
+  var yrs=v('yearsTrading');
+  var docs=[
+    {name:'SARS tax assessments (ITA34)',status:ty>=2?'have':ty===1?'partial':'need',note:ty>=2?'2+ years available - meets bank minimum':ty===1?'1 year - most banks require at least 2':'Not filed - this is the most critical gap for any credit application'},
+    {name:'Signed financial statements',status:fs==='2years'?'have':fs==='1year'?'partial':'need',note:fs==='2years'?'2+ years signed by accountant - strong evidence':fs==='1year'?'1 year - consider having a second year prepared':'None - an accountant-prepared profit and loss statement is required by most banks'},
+    {name:'Bank statements (6 months minimum)',status:bs>=6?'have':bs>=3?'partial':'need',note:bs>=6?bs>=12?'12 months available - excellent coverage':'6 months available - meets minimum requirement':bs>=3?'3 months available - most banks want at least 6':'Under 3 months - extend your record-keeping period before applying'},
+    {name:'Separate business and personal accounts',status:sep==='yes'?'have':'need',note:sep==='yes'?'Accounts separated - lenders can clearly see business income and expenses':'Single account - open a dedicated business account immediately. Mixed accounts raise concerns about income reliability.'},
+    {name:'2+ years of trading history',status:yrs>=2?'have':yrs>=1?'partial':'need',note:yrs>=2?Math.floor(yrs)+' years of trading - meets the standard bank requirement':yrs>=1?Math.floor(yrs*12)+' months of trading - most banks want 2 years':'Under 12 months - consider a phased approach: build documentation now, apply when you reach 2 years'},
+  ];
+  var haveCount=docs.filter(function(d){return d.status==='have';}).length;
+  document.getElementById('incomeDocChecklist').innerHTML='<h3 style="font-size:14px;font-weight:600;color:var(--lc);margin-bottom:10px">Your income documentation checklist</h3>'+docs.map(function(d){
+    var cls={have:'ds-have',partial:'ds-partial',need:'ds-need'}[d.status];
+    var lbl={have:'Have it',partial:'Partial',need:'Need it'}[d.status];
+    return '<div class="doc-row"><div><div class="doc-name">'+d.name+'</div><div style="font-size:11px;color:var(--lm);margin-top:3px">'+d.note+'</div></div><span class="doc-status '+cls+'">'+lbl+'</span></div>';
+  }).join('');
+  var pct=Math.round((haveCount/docs.length)*100);
+  document.getElementById('incomeDocScore').innerHTML='<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--lm);margin-bottom:4px"><span>Income documentation completeness</span><span style="font-weight:600;color:'+(pct>=80?'var(--lg)':pct>=50?'var(--la)':'#C0392B')+'">'+pct+'%</span></div><div class="progress-wrap"><div class="progress-fill" style="width:'+pct+'%;background:'+(pct>=80?'var(--lg)':pct>=50?'var(--la)':'#C0392B')+'"></div></div><p style="font-size:12px;color:var(--lm);margin-top:6px">'+haveCount+' of 5 documentation requirements met. '+(pct>=80?'Strong income documentation package.':pct>=50?'Work in progress - address missing items before applying.':'Significant gaps - build your documentation before approaching any lender.')+'</p></div>';
+}
+
+function updDTI(){
+  var income=v('income')||0;
+  if(income===0){document.getElementById('dtiResult').innerHTML='<div class="tip"><strong>Enter your smoothed monthly income in Step 1</strong> to calculate your debt-to-income ratio.</div>';return;}
+  var existing=v('monthlyDebt');
+  var newRep=v('newRepayment');
+  var total=existing+newRep;
+  var dti=Math.round((total/income)*100);
+  var statusTxt=dti<=30?'Good - within bank guidelines':dti<=40?'Caution - approaching bank limits':'Exceeds typical bank limits (30%)';
+  var existPct=Math.round((existing/income)*100);
+  var newPct=Math.round((newRep/income)*100);
+  document.getElementById('dtiResult').innerHTML='<div class="rc navy" style="margin-bottom:12px"><div class="rl">Debt-to-income ratio (total)</div><div class="rv">'+dti+'%</div><div class="rs">'+statusTxt+' - NCA affordability threshold: 30% of gross income</div></div><div class="dti-bar"><div class="dti-seg" style="width:'+existPct+'%;background:#1A5080"></div><div class="dti-seg" style="width:'+newPct+'%;background:#FF6B47"></div><div class="dti-seg" style="width:'+Math.max(0,100-existPct-newPct)+'%;background:#e8e4dc"></div></div><div style="display:flex;gap:16px;font-size:11px;color:var(--lm);margin-bottom:12px"><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#1A5080;border-radius:2px"></span>Existing debt '+existPct+'%</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#FF6B47;border-radius:2px"></span>New repayment '+newPct+'%</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#e8e4dc;border-radius:2px"></span>Available '+Math.max(0,100-existPct-newPct)+'%</span></div>'+(dti>30?'<div class="wtip"><strong>Your debt-to-income ratio of '+dti+'% exceeds the typical 30% guideline.</strong> To qualify, either reduce existing debt before applying or apply for a lower loan amount. Reducing monthly debt obligations by '+R(total-income*0.3)+' would bring the ratio to 30%.</div>':'<div class="gtip"><strong>Your debt-to-income ratio of '+dti+'% is within guidelines.</strong> This is a positive signal for lenders. Maintain this ratio by not taking on additional debt before applying.</div>');
+}
+
+function compCredit(){
+  updDTI();
+  var adverse=sv('adverseListings');
+  var payment=sv('paymentHistory');
+  var util=sv('creditUtil');
+  var length=sv('creditLength');
+  var score=v('creditScore');
+  var factors=[
+    {name:'Adverse listings',status:adverse==='none'?'green':adverse==='old'?'amber':'red',note:adverse==='none'?'No judgements or defaults - clean record':'Older adverse listings are less damaging but still visible. Ensure they are resolved.',badNote:'Recent adverse listings are the single biggest barrier to credit approval. These must be resolved and time must pass before applying.'},
+    {name:'Payment history',status:payment==='excellent'?'green':payment==='good'?'amber':'red',note:'Consistent on-time payments demonstrate reliability to lenders.'},
+    {name:'Credit utilisation',status:util==='low'?'green':util==='medium'?'amber':'red',note:util==='low'?'Under 30% utilisation - excellent. Shows you use credit responsibly.':util==='medium'?'30-60% - acceptable but lower is better. Pay down balances before applying.':'Over 60% - pay down balances before applying. High utilisation signals financial stress.'},
+    {name:'Length of credit history',status:length==='long'?'green':length==='medium'?'amber':'red',note:length==='long'?'5+ years of credit history - strong track record.':length==='medium'?'2-5 years - reasonable history. Continue building.':'Under 2 years - limited history. Maintain accounts and build record over time.'},
+  ];
+  if(score>0){
+    var scoreStatus=score>=700?'green':score>=610?'amber':'red';
+    factors.unshift({name:'Credit score ('+score+')',status:scoreStatus,note:score>=700?'700+ qualifies for preferential rates at most South African banks.':score>=610?'610-699 meets minimum requirements at most banks. Work towards 700+.':'Below 610 - most banks will decline a home loan. Focus on improving score before applying.'});
+  }
+  var reds=factors.filter(function(f){return f.status==='red';}).length;
+  var colMap={green:'#E8F7F0',amber:'#FEF6DC',red:'#FCE8E4'};
+  var tcMap={green:'#1A6030',amber:'#8A6000',red:'#B03020'};
+  var bdMap={green:'#90D4B0',amber:'#F9D87A',red:'#F5B7B1'};
+  document.getElementById('creditAssessment').innerHTML=factors.map(function(f){
+    return '<div style="background:'+colMap[f.status]+';border:1.5px solid '+bdMap[f.status]+';border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--lc);margin-bottom:3px">'+f.name+'</div><div style="font-size:12px;color:'+tcMap[f.status]+';line-height:1.5">'+(f.status==='red'&&f.badNote?f.badNote:f.note)+'</div></div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;background:'+colMap[f.status]+';color:'+tcMap[f.status]+';border:1px solid '+bdMap[f.status]+';white-space:nowrap">'+(f.status==='green'?'Strong':f.status==='amber'?'Improve':'Address')+'</span></div>';
+  }).join('')+(reds>0?'<div class="tip" style="margin-top:4px"><strong>'+reds+' critical credit issue'+(reds>1?'s':'')+' identified.</strong> Address red items before submitting any credit application. A declined application remains on your credit record and damages your score further.</div>':'<div class="gtip" style="margin-top:4px"><strong>Your credit record is in good shape.</strong> Maintain this by keeping all accounts current and not over-applying for credit.</div>');
+}
+
+function compDeposit(){
+  var goal=sv('creditGoal');
+  var isBond=goal==='bond';
+  document.getElementById('bondDepositRow').style.display=isBond?'grid':'none';
+  if(isBond){
+    document.getElementById('depositSection').innerHTML='<div class="btip"><strong>Home loan deposit:</strong> South African banks are significantly more likely to approve a self-employed applicant who offers a deposit of 10% or more. A deposit reduces the loan-to-value ratio, lowering the bank\'s risk. With a 20% deposit, most major banks will consider your application on its merits regardless of employment type.</div>';
+  } else if(goal==='vehicle'){
+    document.getElementById('depositSection').innerHTML='<div class="btip"><strong>Vehicle finance deposit:</strong> A 10-20% deposit on vehicle finance signals commitment and reduces monthly repayments. Self-employed applicants are more likely to be approved with a deposit in place, particularly with a newer lender relationship.</div>';
+  } else {
+    document.getElementById('depositSection').innerHTML='<div class="btip"><strong>Your asset base matters:</strong> For business finance and personal loans, lenders assess your total financial position rather than a specific deposit. A healthy emergency fund and documented savings signal discipline and repayment capacity.</div>';
+  }
+  updDeposit();
+  updAssets();
+}
+
+function updDeposit(){
+  var price=v('propertyPrice');
+  var deposit=v('depositAmt');
+  if(!price||!deposit){document.getElementById('depositCalc').innerHTML='';return;}
+  var pct=Math.round((deposit/price)*100);
+  var ltv=100-pct;
+  var status=pct>=20?'green':pct>=10?'amber':'red';
+  var colMap={green:['#E8F7F0','#1A6030','#90D4B0'],amber:['#FEF6DC','#8A6000','#F9D87A'],red:['#FCE8E4','#B03020','#F5B7B1']};
+  var c=colMap[status];
+  document.getElementById('depositCalc').innerHTML='<div style="background:'+c[0]+';border:1.5px solid '+c[2]+';border-radius:12px;padding:14px 16px;margin-top:0"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div><div style="font-size:11px;font-weight:600;color:'+c[1]+';letter-spacing:.3px;text-transform:uppercase;margin-bottom:2px">Deposit</div><div style="font-family:DM Serif Display,serif;font-size:26px;color:'+c[1]+'">'+pct+'%</div></div><div style="text-align:right"><div style="font-size:11px;font-weight:600;color:'+c[1]+';letter-spacing:.3px;text-transform:uppercase;margin-bottom:2px">Loan to value</div><div style="font-family:DM Serif Display,serif;font-size:26px;color:'+c[1]+'">'+ltv+'%</div></div></div><div style="font-size:12px;color:'+c[1]+'">'+(pct>=20?'Excellent deposit. At 20%+ most banks will consider your application on its merits regardless of employment type.':pct>=10?'10% deposit meets the minimum threshold. A higher deposit would significantly improve approval odds. You need '+R(price*0.2-deposit)+' more to reach 20%.':'Below 10% - most banks will require a higher deposit from self-employed applicants. You need '+R(price*0.1-deposit)+' more to reach the 10% threshold.')+'</div></div>';
+}
+
+function updAssets(){
+  var shield=v('shieldBal'),ra=v('raValue'),tfsa=v('tfsaValue'),other=v('otherAssets');
+  var total=shield+ra+tfsa+other;
+  var newRep=v('newRepayment');
+  var reserveMonths=newRep>0?Math.floor(shield/newRep):0;
+  var income=v('income');
+  document.getElementById('assetSummary').innerHTML='<div class="ag2" style="margin-top:4px"><div class="sm-stat green"><div class="sv">'+R(total)+'</div><div class="sl">Total documented assets</div></div><div class="sm-stat blue"><div class="sv">'+(newRep>0?reserveMonths+' months':income>0?Math.round(shield/(income*0.3))+' months':'-')+'</div><div class="sl">Repayment reserve in Shield</div></div></div>'+(reserveMonths>=3?'<div class="gtip"><strong>'+reserveMonths+' months of repayments in The Shield.</strong> This is a strong positive signal for lenders assessing self-employed applicants. Mention this explicitly in your application.</div>':newRep>0?'<div class="wtip"><strong>Your Shield holds '+reserveMonths+' months of the proposed repayment.</strong> Banks want to see 3-6 months in liquid savings. Target '+R(newRep*3)+' in your Shield before applying.</div>':'');
+}
+
+function compScore(){
+  var income=v('income'),yrs=v('yearsTrading');
+  var ty=parseInt(sv('taxYears'))||0;
+  var fs=sv('finStatements'),bs=parseInt(sv('bankStatements'))||0,sep=sv('accountsSeparated');
+  var existing=v('monthlyDebt'),newRep=v('newRepayment');
+  var dti=income>0?Math.round(((existing+newRep)/income)*100):100;
+  var adverse=sv('adverseListings'),payment=sv('paymentHistory'),util=sv('creditUtil');
+  var score=v('creditScore'),shield=v('shieldBal');
+  var total=shield+v('raValue')+v('tfsaValue')+v('otherAssets');
+  var pts=0;
+  if(ty>=2)pts+=20;else if(ty===1)pts+=10;
+  if(fs==='2years')pts+=15;else if(fs==='1year')pts+=7;
+  if(bs>=12)pts+=10;else if(bs>=6)pts+=8;else if(bs>=3)pts+=4;
+  if(sep==='yes')pts+=10;
+  if(yrs>=3)pts+=10;else if(yrs>=2)pts+=7;else if(yrs>=1)pts+=3;
+  if(dti<=30)pts+=15;else if(dti<=40)pts+=7;
+  if(adverse==='none')pts+=10;else if(adverse==='old')pts+=4;
+  if(payment==='excellent')pts+=5;else if(payment==='good')pts+=3;
+  if(util==='low')pts+=3;else if(util==='medium')pts+=1;
+  if(score>=700)pts+=5;else if(score>=610)pts+=3;
+  if(newRep>0&&shield>=newRep*3)pts+=7;else if(newRep>0&&shield>=newRep)pts+=3;
+  var readiness=Math.min(95,Math.round((pts/110)*100));
+  document.getElementById('scoreNum').textContent=readiness;
+  document.getElementById('scoreDesc').textContent=readiness>=75?'Strong readiness. Your documentation and financial profile position you well for a credit application.':readiness>=50?'Moderate readiness. Address key gaps before applying to give yourself the best chance of approval.':'Early stage. Focus on building your documentation and financial record before approaching lenders.';
+  var circ=2*Math.PI*54;
+  setTimeout(function(){
+    var el=document.getElementById('scoreCircle');
+    el.style.transition='stroke-dashoffset 1.2s ease';
+    el.setAttribute('stroke',readiness>=75?'#2D9E6B':readiness>=50?'#F5A623':'#FF6B47');
+    el.style.strokeDashoffset=circ-(readiness/100)*circ;
+  },100);
+  document.getElementById('scoreStats').innerHTML=[
+    {cls:'blue',val:ty+'+ yrs',lbl:'Tax assessments'},
+    {cls:dti<=30?'green':dti<=40?'amber':'red',val:dti+'%',lbl:'Debt-to-income'},
+    {cls:adverse==='none'?'green':adverse==='old'?'amber':'red',val:adverse==='none'?'Clean':adverse==='old'?'Old listing':'Recent',lbl:'Credit record'},
+  ].map(function(s){return '<div class="sm-stat '+s.cls+'"><div class="sv">'+s.val+'</div><div class="sl">'+s.lbl+'</div></div>';}).join('');
+  var strengths=[],gaps=[];
+  if(ty>=2)strengths.push('2+ years of filed SARS tax assessments - meets bank minimum');else gaps.push('Fewer than 2 years of SARS tax assessments (ITA34) - most banks require at least 2');
+  if(fs==='2years')strengths.push('2+ years of signed financial statements from an accountant');else gaps.push('Missing signed financial statements - an accountant-prepared set is required');
+  if(bs>=6)strengths.push(bs+' months of bank statements available');else gaps.push('Fewer than 6 months of bank statements - extend to at least 6 months');
+  if(sep==='yes')strengths.push('Business and personal accounts separated - clean income picture for lenders');else gaps.push('Business and personal accounts not separated - open a dedicated business account');
+  if(dti<=30)strengths.push('Debt-to-income ratio of '+dti+'% is within NCA guidelines');else gaps.push('Debt-to-income ratio of '+dti+'% exceeds 30% guideline - reduce debt before applying');
+  if(adverse==='none')strengths.push('No adverse credit listings - clean record');else if(adverse==='recent')gaps.push('Recent adverse listings - resolve these and allow time before applying');
+  if(newRep>0&&shield>=newRep*3)strengths.push('3+ months of proposed repayment held in The Shield - strong lender signal');else if(newRep>0)gaps.push('Build Shield to 3+ months of proposed repayment ('+R(newRep*3)+' target)');
+  if(yrs>=2)strengths.push(Math.floor(yrs)+' years of trading history meets bank requirements');else gaps.push(Math.floor(yrs*12)+' months of trading history - most banks want 2+ years');
+  document.getElementById('strengthsGaps').innerHTML=(strengths.length?'<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:var(--lg);margin-bottom:6px">Working in your favour ('+strengths.length+')</div>'+strengths.map(function(s){return '<div style="display:flex;gap:8px;padding:5px 0;font-size:12px;color:#1A6030;border-bottom:1px solid #C0E8D0"><span style="color:var(--lg);font-weight:600;flex-shrink:0">+</span>'+s+'</div>';}).join('')+'</div>':'')+(gaps.length?'<div><div style="font-size:12px;font-weight:600;color:#C0392B;margin-bottom:6px">Needs attention ('+gaps.length+')</div>'+gaps.map(function(g){return '<div style="display:flex;gap:8px;padding:5px 0;font-size:12px;color:#8A2010;border-bottom:1px solid #F5B7B1"><span style="color:#C0392B;font-weight:600;flex-shrink:0">!</span>'+g+'</div>';}).join('')+'</div>':'');
+  var actions=[];
+  if(ty<2)actions.push('File outstanding SARS tax returns immediately - engage a registered tax practitioner to file all overdue ITR12 returns and ensure 2+ years of ITA34 assessments are available');
+  if(fs!=='2years')actions.push('Commission a set of annual financial statements from a chartered accountant or registered accounting officer - this is the single most impactful document for a self-employed credit application');
+  if(sep==='no')actions.push('Open a dedicated business bank account this week - all business income and expenses should flow through it');
+  if(bs<6)actions.push('Maintain your current bank records for '+(6-bs)+' more months before applying - consistent monthly deposits that match your declared income are what lenders are looking for');
+  if(adverse==='recent')actions.push('Resolve all adverse credit listings - contact the credit provider to settle the amount and request removal from the credit bureau. Allow at least 12 months before a major credit application');
+  if(dti>30&&income>0)actions.push('Reduce monthly debt obligations by '+R((existing+newRep)-income*0.3)+' to bring your debt-to-income ratio to 30%. Prioritise clearing highest-interest short-term debt first');
+  if(newRep>0&&shield<newRep*3)actions.push('Build your Shield to '+R(newRep*3)+' - 3 months of the proposed repayment amount. Mention this balance in your application');
+  if(yrs<2)actions.push('Continue operating and building your trading record - most banks require 2 full years');
+  actions.push('Request your free credit report from TransUnion, Experian, or Compuscan - review for errors and dispute any incorrect listings before applying');
+  actions.push('Approach a bond originator (such as ooba or BetterBond) who specialises in self-employed applications');
+  document.getElementById('actionPlan').innerHTML=actions.slice(0,8).map(function(a,i){return '<div class="action-item"><div class="action-num">'+(i+1)+'</div><div class="action-txt">'+a+'</div></div>';}).join('');
+}
+</script>
+
+<script>
+/* Lumpy shell bridge - does NOT touch any tool calculation. */
+(function(){
+  var M=4, MAXSTEP=5;
+  var PKEY='lumpy_profile_v1', GKEY='lumpy_progress_v1', TKEY='lumpy_tool_'+M+'_v1', PLKEY='lumpy_profile';
+  function rp(){try{return JSON.parse(localStorage.getItem(PKEY))||{}}catch(e){return{}}}
+  function wp(p){try{localStorage.setItem(PKEY,JSON.stringify(p))}catch(e){}}
+  function rpl(){try{return JSON.parse(localStorage.getItem(PLKEY))||{}}catch(e){return{}}}
+  function savedStr(){try{var d=new Date();return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}catch(e){return 'just now'}}
+  function post(type,extra){try{if(window.parent&&window.parent!==window){var m={lumpy:type,module:M};if(extra)for(var k in extra)m[k]=extra[k];window.parent.postMessage(m,'*')}}catch(e){}}
+  function patch(o){var p=rp(),ch=false;for(var k in o){var val=o[k];if(val===null||val===undefined||val==='')continue;if(typeof val==='number'&&(isNaN(val)||!isFinite(val)))continue;if(p[k]!==val){p[k]=val;ch=true}}if(ch){wp(p);post('profile',{profile:p})}}
+  /* lumpy_profile: the 9-field foundation object that Module 6 (Annual Planner) reads. */
+  function patchPl(o){var p=rpl(),ch=false;for(var k in o){var val=o[k];if(val===null||val===undefined||val==='')continue;if(typeof val==='number'&&(isNaN(val)||!isFinite(val)))continue;if(p[k]!==val){p[k]=val;ch=true}}if(ch){p.savedAt=savedStr();try{localStorage.setItem(PLKEY,JSON.stringify(p))}catch(e){}post('profile',{})}}
+  function setV(id,val){var el=document.getElementById(id);if(!el||val===null||val===undefined||val==='')return;el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
+  function num(id){var el=document.getElementById(id);if(!el)return null;var n=parseFloat(el.value);return isNaN(n)?null:n;}
+
+  /* Dynamically-added rows (expenses / deductions) - saved and replayed via each tool's own add fn. */
+  var ROWS={1:{c:'#expList',add:'addE',sel:'.er'},2:{c:'#expList',add:'addExp',sel:'.exp-row'},5:{c:'#dedList',add:'addDed',sel:'.deduct-row'}};
+  function readRows(){var cfg=ROWS[M];if(!cfg)return null;var box=document.querySelector(cfg.c);if(!box)return null;var out=[];box.querySelectorAll(cfg.sel).forEach(function(r){var t=r.querySelector('input[type=text]'),s=r.querySelector('select'),a=r.querySelector('input[type=number]');out.push([t?t.value:'',a?(parseFloat(a.value)||0):0,s?s.value:'']);});return out;}
+  function restoreRows(){var cfg=ROWS[M];if(!cfg)return;var raw=null;try{raw=localStorage.getItem(TKEY+'_rows')}catch(e){return}if(raw===null)return;var rows;try{rows=JSON.parse(raw)}catch(e){return}if(!Array.isArray(rows))return;var box=document.querySelector(cfg.c),addFn=window[cfg.add];if(!box||typeof addFn!=='function')return;var g=0;while(box.querySelector('.del')&&g++<200){box.querySelector('.del').click();}rows.forEach(function(r){try{addFn(r[0],r[1],r[2])}catch(e){}});}
+
+  /* Module 6 income forecast persistence (the 12 forecast cells have no ids). */
+  function readForecast(){var g=document.getElementById('incomeGrid');if(!g)return null;return [].map.call(g.querySelectorAll('input[type=number]'),function(i){return i.value});}
+  function applyForecast(){var raw=null;try{raw=localStorage.getItem(TKEY+'_forecast')}catch(e){return}if(!raw)return;var arr;try{arr=JSON.parse(raw)}catch(e){return}if(!Array.isArray(arr))return;var g=document.getElementById('incomeGrid');if(!g)return;var ins=g.querySelectorAll('input[type=number]');arr.forEach(function(val,i){if(ins[i]&&val!==''&&val!=null){ins[i].value=val;ins[i].dispatchEvent(new Event('input',{bubbles:true}));}});}
+  if(M===6&&typeof buildIncomeGrid==='function'){var _big=buildIncomeGrid;window.buildIncomeGrid=function(){var r=_big.apply(this,arguments);applyForecast();return r;};}
+
+  /* The tools' "Next module" buttons call sendPrompt(); repurpose it to advance within the shell. */
+  window.sendPrompt=function(){post('next');};
+
+  /* 1) Restore this tool's own previously entered fields (Module 6 foundations are owned by loadProfile). */
+  var SKIP6=(M===6)?{smoothedIncome:1,shieldTopup:1,t1:1,t2:1,t3:1,raMonthly:1,tfsaMonthly:1,effTaxRate:1,raAnnual:1}:null;
+  try{var s=JSON.parse(localStorage.getItem(TKEY))||{};Object.keys(s).forEach(function(id){if(SKIP6&&SKIP6[id])return;var el=document.getElementById(id);if(el&&document.activeElement!==el){el.value=s[id];el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}});}catch(e){}
+  restoreRows();
+
+  /* 2) Prefill shared values from earlier modules (these win over stale local copies). */
+  var p=rp();
+  if(M===2){setV('smoothed',p.income);setV('cur',p.currency);}
+  if(M===3){setV('income',p.income);setV('t1exp',p.tier1);}
+  if(M===4){setV('income',p.income);setV('shieldBal',p.shield);setV('raValue',p.raValue);}
+  if(M===5){setV('grossIncome',p.grossAnnual);}
+  /* Module 6 prefills itself via its own loadProfile() reading 'lumpy_profile'. */
+
+  /* 3) Harvest: persist fields and push shared outputs to both the shell profile and the planner profile. */
+  function tier1FromDOM(){var t=0;document.querySelectorAll('#expList .er').forEach(function(r){var sel=r.querySelector('select'),amt=r.querySelector('input[type=number]');if(sel&&amt&&sel.value==='1')t+=parseFloat(amt.value)||0;});return t;}
+  function snap(){
+    try{var map={};document.querySelectorAll('input[id],select[id]').forEach(function(el){if(el.id&&el.type!=='button')map[el.id]=el.value;});localStorage.setItem(TKEY,JSON.stringify(map));}catch(e){}
+    try{var rr=readRows();if(rr)localStorage.setItem(TKEY+'_rows',JSON.stringify(rr));}catch(e){}
+    try{if(M===6){var fc=readForecast();if(fc)localStorage.setItem(TKEY+'_forecast',JSON.stringify(fc));}}catch(e){}
+    try{
+      if(M===1){
+        var o={};if(typeof getSm==='function'){var sm=getSm();if(sm>0)o.income=Math.round(sm);}if(typeof tax==='function'){o.taxRate=tax();}if(typeof cur==='function'){o.currency=cur();}var t1=tier1FromDOM();if(t1>0)o.tier1=Math.round(t1);var ga=0;for(var i=0;i<12;i++){var mi=document.getElementById('m'+i);if(mi)ga+=parseFloat(mi.value)||0;}if(ga>0)o.grossAnnual=Math.round(ga);patch(o);
+        var pl={};var smx=(typeof getSm==='function')?getSm():0;if(smx>0)pl.smoothedIncome=Math.round(smx);if(typeof tax==='function')pl.effTaxRate=Math.round(tax());
+        try{var rt=(typeof tax==='function')?tax()/100:0;var tA=smx*rt;var tE=0;document.querySelectorAll('#expList .er input[type=number]').forEach(function(x){tE+=parseFloat(x.value)||0;});var lA=Math.min(tE,smx-tA);var bA=Math.max(0,smx-tA-lA);if(smx>0)pl.shieldTopup=Math.round(bA);}catch(e){}
+        patchPl(pl);
+      }
+      if(M===2){var pl2={};if(typeof totByTier==='function'){pl2.t1=Math.round(totByTier('1'));pl2.t2=Math.round(totByTier('2'));pl2.t3=Math.round(totByTier('3'));}patchPl(pl2);}
+      if(M===3){patch({shield:num('shieldBal'),raValue:num('raValue'),tier1:num('t1exp'),income:num('income')});patchPl({raMonthly:num('raMonthly'),tfsaMonthly:num('tfsaMonthly')});}
+      if(M===5){var pl5={};var er=document.getElementById('effRate');if(er){var ev=parseFloat((er.textContent||'').replace(/[^0-9.]/g,''));if(!isNaN(ev)&&ev>0)pl5.effTaxRate=Math.round(ev);}var rcv=num('raContrib');if(rcv!=null)pl5.raAnnual=rcv;patchPl(pl5);}
+    }catch(e){}
+    post('profile',{profile:rp()});
+  }
+  document.addEventListener('change',function(){snap();},true);
+  document.addEventListener('input',function(){clearTimeout(window.__lsnap);window.__lsnap=setTimeout(snap,450);},true);
+
+  /* 4) Mark the module complete when its final step is reached. */
+  if(typeof gS==='function'){var _g=gS;window.gS=function(n){_g(n);try{if(n>=MAXSTEP){var g=JSON.parse(localStorage.getItem(GKEY))||{};if(!g['m'+M]){g['m'+M]=Date.now();localStorage.setItem(GKEY,JSON.stringify(g));}post('progress');}}catch(e){}snap();};}
+
+  /* 5) Report height so the shell can size the iframe with no inner scrollbar. */
+  function rh(){var lw=document.querySelector('.lw');var h=Math.max(document.body.scrollHeight,document.body.offsetHeight,lw?Math.ceil(lw.getBoundingClientRect().bottom):0);post('height',{height:h});}
+  window.addEventListener('load',function(){rh();setTimeout(rh,250);setTimeout(rh,800);});
+  if(window.ResizeObserver){try{new ResizeObserver(function(){rh()}).observe(document.body)}catch(e){}}
+  window.addEventListener('resize',rh);setInterval(rh,1500);
+})();
+</script>
+
+</body>
+</html>
